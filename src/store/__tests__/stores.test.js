@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useAuthStore from '../auth.store';
 import useCacheStore from '../cache.store';
-import { STORAGE_KEYS, clearAll, loadCache, setString } from '../../utils/storage.utils';
+import { STORAGE_KEYS, clearAll, loadCache, loadPlanDetail, savePlanDetail, setString } from '../../utils/storage.utils';
 
 describe('auth.store', () => {
   test('setUser autentica y limpia el aviso de sesión expirada; clearAuth cierra la sesión', () => {
@@ -41,6 +41,17 @@ describe('cache.store', () => {
     await useCacheStore.getState().hydrate();
 
     expect(useCacheStore.getState()).toMatchObject({ spaces: [{ id: 's' }], faq: [{ id: 'f' }], schedule: [], calendar: [] });
+  });
+
+  test('el detalle de cada plano se guarda aparte y se borra al cerrar sesión', async () => {
+    const plan = { id: 'plano-1', imagen: 'data:image/png;base64,AA==', espacios: [] };
+    await savePlanDetail(plan);
+
+    expect(await loadPlanDetail('plano-1')).toEqual(plan);
+    expect(await loadPlanDetail('otro')).toBeNull();
+
+    await clearAll();
+    expect(await loadPlanDetail('plano-1')).toBeNull();
   });
 
   test('loadCache ignora datos corruptos', async () => {

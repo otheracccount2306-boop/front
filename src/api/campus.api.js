@@ -17,3 +17,18 @@ export const getSpaces = async (category) =>
  */
 export const searchSpaces = async (query) =>
   (await apiClient.get('/campus/spaces/search', { params: { q: query } })).data.data;
+
+/**
+ * @description Lista los planos del campus visibles para los estudiantes, sin la imagen.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @returns {Promise<Array>} Planos con id, nombre, edificio, piso, ancho, alto y actualizadoEn
+ */
+export const getPlans = async () => (await apiClient.get('/campus/plans')).data.data;
+
+/**
+ * @description Obtiene un plano con su imagen (data URL) y los polígonos de sus espacios.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @param {string} id - Identificador del plano
+ * @returns {Promise<Object>} Plano completo para el mapa
+ */
+export const getPlan = async (id) => (await apiClient.get(`/campus/plans/${id}`)).data.data;

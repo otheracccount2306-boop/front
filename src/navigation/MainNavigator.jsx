@@ -6,6 +6,7 @@ import AppIcon from '../components/common/AppIcon';
 import CalendarScreen from '../screens/academic/CalendarScreen';
 import ScheduleScreen from '../screens/academic/ScheduleScreen';
 import ProfileScreen from '../screens/auth/ProfileScreen';
+import CampusMapScreen from '../screens/campus/CampusMapScreen';
 import CampusSearchScreen from '../screens/campus/CampusSearchScreen';
 import CampusSpacesScreen from '../screens/campus/CampusSpacesScreen';
 import DashboardScreen from '../screens/dashboard/DashboardScreen';
@@ -67,7 +68,7 @@ const ServicesNavigator = () => (
 );
 
 /**
- * @description Pila de la pestaña Campus: Espacios y Búsqueda.
+ * @description Pila de la pestaña Campus: Espacios, Búsqueda y Mapa.
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @returns {React.JSX.Element} Pila de Campus
  */
@@ -75,6 +76,7 @@ const CampusNavigator = () => (
   <CampusStack.Navigator screenOptions={stackOptions}>
     <CampusStack.Screen name="CampusSpaces" component={CampusSpacesScreen} />
     <CampusStack.Screen name="CampusSearch" component={CampusSearchScreen} />
+    <CampusStack.Screen name="CampusMap" component={CampusMapScreen} />
   </CampusStack.Navigator>
 );
 

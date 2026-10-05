@@ -14,6 +14,16 @@ export const TAB_ITEMS = [
 ];
 
 /**
+ * @description Pantallas del módulo Campus, mostradas como pestañas segmentadas en cada una.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ */
+export const CAMPUS_MODULE_TABS = [
+  { name: 'CampusSpaces', label: 'Espacios' },
+  { name: 'CampusSearch', label: 'Buscar' },
+  { name: 'CampusMap', label: 'Mapa' },
+];
+
+/**
  * @description Ancho en puntos del menú lateral de la versión web.
  * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
  * @author Diego Luna <diego.luna@campusucc.edu.co>

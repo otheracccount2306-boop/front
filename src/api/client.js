@@ -11,6 +11,7 @@ const CACHEABLE_URLS = {
   '/academic/calendar': 'calendar',
   '/campus/spaces': 'spaces',
   '/services/faq': 'faq',
+  '/campus/plans': 'plans',
 };
 
 const apiClient = axios.create({

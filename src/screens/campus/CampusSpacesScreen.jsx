@@ -11,13 +11,9 @@ import ScreenHeader from '../../components/common/ScreenHeader';
 import SegmentedTabs from '../../components/common/SegmentedTabs';
 import useSpaces from '../../hooks/useSpaces';
 import colors from '../../theme/colors';
+import { CAMPUS_MODULE_TABS } from '../../navigation/tabItems';
 import { spacing } from '../../theme/typography';
 import { ALL_VALUE, SPACE_CHIPS } from '../../utils/category.utils';
-
-const MODULE_TABS = [
-  { name: 'CampusSpaces', label: 'Espacios' },
-  { name: 'CampusSearch', label: 'Buscar' },
-];
 
 /**
  * @description Pantalla del catálogo de espacios del campus con filtro por categoría. Al tocar una
@@ -34,7 +30,7 @@ const CampusSpacesScreen = ({ navigation }) => {
 
   return (
     <ScreenContainer header={<ScreenHeader title="Campus" subtitle="Espacios y ubicaciones" />}>
-      <SegmentedTabs items={MODULE_TABS} current="CampusSpaces" onChange={(name) => navigation.navigate(name)} />
+      <SegmentedTabs items={CAMPUS_MODULE_TABS} current="CampusSpaces" onChange={(name) => navigation.navigate(name)} />
       <CategoryChips chips={SPACE_CHIPS} selected={category} onSelect={setCategory} />
       {error ? (
         <View style={styles.banner}>
@@ -53,7 +49,14 @@ const CampusSpacesScreen = ({ navigation }) => {
           ListEmptyComponent={error ? null : <EmptyState icon="map-outline" message="No hay espacios en esta categoría" />}
         />
       )}
-      <SpaceDetailModal space={selected} onClose={() => setSelected(null)} />
+      <SpaceDetailModal
+        space={selected}
+        onClose={() => setSelected(null)}
+        onShowOnMap={(space) => {
+          setSelected(null);
+          navigation.navigate('CampusMap', { spaceId: space.id });
+        }}
+      />
     </ScreenContainer>
   );
 };

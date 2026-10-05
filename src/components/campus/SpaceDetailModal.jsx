@@ -13,9 +13,11 @@ import AppButton from '../common/AppButton';
  * @param {Object} props - Propiedades del componente
  * @param {Object|null} props.space - Espacio a mostrar; si es null el modal se oculta
  * @param {Function} props.onClose - Se ejecuta al cerrar el modal
+ * @param {Function} [props.onShowOnMap] - Recibe el espacio para abrirlo en el mapa; el botón solo
+ *                                         aparece si el espacio está dibujado en un plano
  * @returns {React.JSX.Element} Modal de detalle
  */
-const SpaceDetailModal = ({ space, onClose }) => (
+const SpaceDetailModal = ({ space, onClose, onShowOnMap }) => (
   <Modal visible={Boolean(space)} transparent animationType="fade" onRequestClose={onClose}>
     <View style={styles.overlay}>
       {space ? (
@@ -31,7 +33,15 @@ const SpaceDetailModal = ({ space, onClose }) => (
             <DetailLine label="Piso" value={space.piso} />
             <DetailLine label="Descripción" value={space.descripcion} />
             <DetailLine label="Cómo llegar" value={space.referencia} />
-            <AppButton label="Cerrar" onPress={onClose} style={styles.close} />
+            {onShowOnMap && space.planoId && space.geometria ? (
+              <AppButton label="Ver en el mapa" onPress={() => onShowOnMap(space)} style={styles.close} />
+            ) : null}
+            <AppButton
+              label="Cerrar"
+              variant={onShowOnMap && space.planoId && space.geometria ? 'outline' : 'primary'}
+              onPress={onClose}
+              style={styles.close}
+            />
           </ScrollView>
         </View>
       ) : null}

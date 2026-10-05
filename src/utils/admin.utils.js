@@ -49,6 +49,15 @@ export const SPACE_CATEGORY_OPTIONS = optionsFrom([
 ]);
 
 /**
+ * @description Pestañas de la sección Espacios del panel: catálogo y planos del mapa.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ */
+export const ADMIN_SPACES_TABS = [
+  { name: 'SpacesManagement', label: 'Espacios' },
+  { name: 'PlansManagement', label: 'Planos' },
+];
+
+/**
  * @description Opciones de categoría del calendario académico.
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  */
