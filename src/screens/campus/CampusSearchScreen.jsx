@@ -1,0 +1,76 @@
+import React, { useState } from 'react';
+import { FlatList, StyleSheet, View } from 'react-native';
+import SpaceCard from '../../components/campus/SpaceCard';
+import SpaceDetailModal from '../../components/campus/SpaceDetailModal';
+import AppLoader from '../../components/common/AppLoader';
+import EmptyState from '../../components/common/EmptyState';
+import ErrorBanner from '../../components/common/ErrorBanner';
+import ScreenContainer from '../../components/common/ScreenContainer';
+import ScreenHeader from '../../components/common/ScreenHeader';
+import SearchBar from '../../components/common/SearchBar';
+import SegmentedTabs from '../../components/common/SegmentedTabs';
+import { useSpaceSearch } from '../../hooks/useSpaces';
+import { spacing } from '../../theme/typography';
+
+const MODULE_TABS = [
+  { name: 'CampusSpaces', label: 'Espacios' },
+  { name: 'CampusSearch', label: 'Buscar' },
+];
+
+/**
+ * @description Pantalla de búsqueda de espacios por nombre o código. La barra de búsqueda recibe el
+ *              foco al entrar, consulta el backend con debounce de 300 ms y exige al menos 2 caracteres.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @param {Object} props - Props de navegación de React Navigation
+ * @param {Object} props.navigation - Objeto de navegación
+ * @returns {React.JSX.Element} Pantalla de búsqueda del campus
+ */
+const CampusSearchScreen = ({ navigation }) => {
+  const [query, setQuery] = useState('');
+  const [selected, setSelected] = useState(null);
+  const { results, loading, error, tooShort } = useSpaceSearch(query);
+
+  let content;
+  if (tooShort) {
+    content = <EmptyState icon="search-outline" message="Ingresa al menos 2 caracteres" />;
+  } else if (loading) {
+    content = <AppLoader fill />;
+  } else {
+    content = (
+      <FlatList
+        data={results}
+        keyExtractor={(space) => space.id}
+        renderItem={({ item }) => <SpaceCard space={item} onPress={setSelected} />}
+        contentContainerStyle={styles.list}
+        keyboardShouldPersistTaps="handled"
+        ListEmptyComponent={error ? null : <EmptyState icon="search-outline" message="No encontramos espacios con esa búsqueda" />}
+      />
+    );
+  }
+
+  return (
+    <ScreenContainer header={<ScreenHeader title="Campus" subtitle="Buscar un espacio" />}>
+      <SegmentedTabs items={MODULE_TABS} current="CampusSearch" onChange={(name) => navigation.navigate(name)} />
+      <SearchBar value={query} onChangeText={setQuery} placeholder="Nombre o código, por ejemplo lab" autoFocus />
+      {error ? (
+        <View style={styles.banner}>
+          <ErrorBanner message={error} />
+        </View>
+      ) : null}
+      {content}
+      <SpaceDetailModal space={selected} onClose={() => setSelected(null)} />
+    </ScreenContainer>
+  );
+};
+
+const styles = StyleSheet.create({
+  banner: {
+    marginHorizontal: spacing.lg,
+  },
+  list: {
+    flexGrow: 1,
+    paddingBottom: spacing.xl,
+  },
+});
+
+export default CampusSearchScreen;
