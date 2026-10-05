@@ -23,6 +23,18 @@ API_BASE_URL=https://mi-servidor/api/v1 npm run build:web
 
 El backend acepta cualquier origen por defecto. En producción defina `CORS_ALLOWED_ORIGINS` en el backend con la URL de esta app.
 
+## Mapa del campus
+
+La pestaña **Campus → Mapa** muestra el plano del edificio con Leaflet (`L.CRS.Simple`, sin GPS ni teselas) dentro de un WebView. Funciona **sin conexión**: Leaflet va incrustado en el HTML (`npm install` lo genera con `scripts/build-campus-map.js`; también `npm run build:map`), el listado de planos se cachea como el resto de módulos y cada plano (imagen y polígonos) se guarda en su propia clave de AsyncStorage. Solo se vuelve a descargar un plano cuando cambia su `actualizadoEn`.
+
+El estudiante busca un salón por nombre o código (búsqueda local) o pulsa **Ver en el mapa** en el detalle de un espacio. La app envía el UUID al mapa con `injectJavaScript` → `window.highlightSpace(uuid)`, que ilumina el polígono y centra la vista; si el salón está en otro plano, primero cambia de plano. En web, el mismo HTML va en un `iframe` y la app usa `postMessage` (`CampusMapView.web.jsx`).
+
+En el panel, **Espacios → Planos** permite subir la imagen del plano (se optimiza en el navegador) y abrir el editor: se elige un espacio de la lista y se dibuja con la herramienta de polígono o rectángulo de Leaflet.draw. Cada trazo, edición de vértices o borrado se guarda solo en la API como GeoJSON; **Exportar GeoJSON** descarga una copia. El editor necesita ratón, así que en móvil muestra un aviso.
+
+Archivos principales: `src/components/campus/map/` (plantilla HTML, `buildMapHtml`, `CampusMapView`), `src/screens/campus/CampusMapScreen.jsx`, `src/hooks/useCampusMap.js`, `src/components/admin/map/` y `src/screens/admin/Plan*.jsx`.
+
+Para Android e iOS, `react-native-webview` es un módulo nativo: después de copiar las carpetas `android/` e `ios/` (ver más abajo), ejecute `pod install` en iOS.
+
 ## Pruebas
 
 ```

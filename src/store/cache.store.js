@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import { loadCache, saveCache } from '../utils/storage.utils';
 
-const EMPTY = { schedule: [], spaces: [], faq: [], calendar: [] };
+const EMPTY = { schedule: [], spaces: [], faq: [], calendar: [], plans: [] };
 
 /**
- * @description Store Zustand de la caché de datos (horario, espacios, preguntas frecuentes y
- *              calendario). Cada escritura se persiste en AsyncStorage y se puede rehidratar al
+ * @description Store Zustand de la caché de datos (horario, espacios, preguntas frecuentes,
+ *              calendario y planos del campus). Cada escritura se persiste en AsyncStorage y se puede rehidratar al
  *              abrir la aplicación. También guarda si la app está sin conexión.
  * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
  * @author Diego Luna <diego.luna@campusucc.edu.co>
@@ -24,13 +24,14 @@ const useCacheStore = create((set) => ({
   setCalendar: (data) => useCacheStore.getState().setCacheData('calendar', data),
   setOffline: (isOffline) => set({ isOffline }),
   hydrate: async () => {
-    const [schedule, spaces, faq, calendar] = await Promise.all([
+    const [schedule, spaces, faq, calendar, plans] = await Promise.all([
       loadCache('schedule'),
       loadCache('spaces'),
       loadCache('faq'),
       loadCache('calendar'),
+      loadCache('plans'),
     ]);
-    set({ schedule, spaces, faq, calendar });
+    set({ schedule, spaces, faq, calendar, plans });
   },
   reset: () => set({ ...EMPTY, isOffline: false }),
 }));

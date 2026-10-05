@@ -9,3 +9,6 @@ ios/Pods/
 ios/build/
 .expo/
 coverage/
+
+# Mapa del campus: se genera en postinstall con scripts/build-campus-map.js
+src/components/campus/map/campusMapTemplate.generated.js

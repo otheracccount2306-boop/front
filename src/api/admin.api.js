@@ -229,6 +229,69 @@ export const deleteSpace = async (id) => {
 };
 
 /**
+ * @description Lista los planos del campus, activos e inactivos, sin la imagen.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @returns {Promise<Array>} Planos con la cantidad de espacios dibujados
+ */
+export const listAllPlans = async () => (await apiClient.get('/admin/campus/plans')).data.data;
+
+/**
+ * @description Obtiene un plano de cualquier estado con su imagen y todos sus polígonos.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @param {string} id - Identificador del plano
+ * @returns {Promise<Object>} Plano completo para el editor
+ */
+export const getAdminPlan = async (id) => (await apiClient.get(`/admin/campus/plans/${id}`)).data.data;
+
+/**
+ * @description Crea un plano. La imagen viaja como data URL y el servidor lee sus dimensiones.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @param {Object} data - nombre, edificio, piso, imagen, ancho, alto y activo
+ * @returns {Promise<Object>} Plano creado
+ */
+export const createPlan = async (data) => (await apiClient.post('/admin/campus/plans', data, { timeout: 60000 })).data.data;
+
+/**
+ * @description Actualiza un plano; imagen null conserva la actual.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @param {string} id - Identificador del plano
+ * @param {Object} data - Datos del plano
+ * @returns {Promise<Object>} Plano actualizado
+ */
+export const updatePlan = async (id, data) =>
+  (await apiClient.put(`/admin/campus/plans/${id}`, data, { timeout: 60000 })).data.data;
+
+/**
+ * @description Elimina lógicamente un plano; sus polígonos se conservan.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @param {string} id - Identificador del plano
+ * @returns {Promise<void>} Promesa resuelta al eliminar el plano
+ */
+export const deletePlan = async (id) => {
+  await apiClient.delete(`/admin/campus/plans/${id}`);
+};
+
+/**
+ * @description Guarda el polígono GeoJSON de un espacio dibujado sobre un plano.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @param {string} spaceId - Identificador del espacio
+ * @param {string} planoId - Plano sobre el que se dibujó
+ * @param {Object} geometria - GeoJSON Geometry de tipo Polygon en píxeles del plano
+ * @returns {Promise<Object>} Espacio actualizado
+ */
+export const saveSpaceGeometry = async (spaceId, planoId, geometria) =>
+  (await apiClient.put(`/admin/campus/spaces/${spaceId}/geometry`, { planoId, geometria })).data.data;
+
+/**
+ * @description Quita el polígono de un espacio.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @param {string} spaceId - Identificador del espacio
+ * @returns {Promise<Object>} Espacio sin ubicación en el mapa
+ */
+export const clearSpaceGeometry = async (spaceId) =>
+  (await apiClient.delete(`/admin/campus/spaces/${spaceId}/geometry`)).data.data;
+
+/**
  * @description Lista las asignaturas, activas e inactivas, opcionalmente de un periodo académico.
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @param {Object} [options] - Opciones de consulta

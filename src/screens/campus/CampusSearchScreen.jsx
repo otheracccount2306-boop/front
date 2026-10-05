@@ -10,12 +10,8 @@ import ScreenHeader from '../../components/common/ScreenHeader';
 import SearchBar from '../../components/common/SearchBar';
 import SegmentedTabs from '../../components/common/SegmentedTabs';
 import { useSpaceSearch } from '../../hooks/useSpaces';
+import { CAMPUS_MODULE_TABS } from '../../navigation/tabItems';
 import { spacing } from '../../theme/typography';
-
-const MODULE_TABS = [
-  { name: 'CampusSpaces', label: 'Espacios' },
-  { name: 'CampusSearch', label: 'Buscar' },
-];
 
 /**
  * @description Pantalla de búsqueda de espacios por nombre o código. La barra de búsqueda recibe el
@@ -50,7 +46,7 @@ const CampusSearchScreen = ({ navigation }) => {
 
   return (
     <ScreenContainer header={<ScreenHeader title="Campus" subtitle="Buscar un espacio" />}>
-      <SegmentedTabs items={MODULE_TABS} current="CampusSearch" onChange={(name) => navigation.navigate(name)} />
+      <SegmentedTabs items={CAMPUS_MODULE_TABS} current="CampusSearch" onChange={(name) => navigation.navigate(name)} />
       <SearchBar value={query} onChangeText={setQuery} placeholder="Nombre o código, por ejemplo lab" autoFocus />
       {error ? (
         <View style={styles.banner}>
@@ -58,7 +54,14 @@ const CampusSearchScreen = ({ navigation }) => {
         </View>
       ) : null}
       {content}
-      <SpaceDetailModal space={selected} onClose={() => setSelected(null)} />
+      <SpaceDetailModal
+        space={selected}
+        onClose={() => setSelected(null)}
+        onShowOnMap={(space) => {
+          setSelected(null);
+          navigation.navigate('CampusMap', { spaceId: space.id });
+        }}
+      />
     </ScreenContainer>
   );
 };

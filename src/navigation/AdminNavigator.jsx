@@ -9,6 +9,9 @@ import EventsManagementScreen from '../screens/admin/EventsManagementScreen';
 import NewsFormScreen from '../screens/admin/NewsFormScreen';
 import NewsManagementScreen from '../screens/admin/NewsManagementScreen';
 import ServiceFormScreen from '../screens/admin/ServiceFormScreen';
+import PlanEditorScreen from '../screens/admin/PlanEditorScreen';
+import PlanFormScreen from '../screens/admin/PlanFormScreen';
+import PlansManagementScreen from '../screens/admin/PlansManagementScreen';
 import ServicesManagementScreen from '../screens/admin/ServicesManagementScreen';
 import SpaceFormScreen from '../screens/admin/SpaceFormScreen';
 import SpacesManagementScreen from '../screens/admin/SpacesManagementScreen';
@@ -77,7 +80,7 @@ const ServicesNavigator = () => (
 );
 
 /**
- * @description Pila de la sección Espacios: listado y formulario.
+ * @description Pila de la sección Espacios: catálogo, formulario, planos y editor del mapa.
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @returns {React.JSX.Element} Pila de espacios
  */
@@ -85,6 +88,9 @@ const SpacesNavigator = () => (
   <SpacesStack.Navigator screenOptions={stackOptions}>
     <SpacesStack.Screen name="SpacesManagement" component={SpacesManagementScreen} />
     <SpacesStack.Screen name="SpaceForm" component={SpaceFormScreen} />
+    <SpacesStack.Screen name="PlansManagement" component={PlansManagementScreen} />
+    <SpacesStack.Screen name="PlanForm" component={PlanFormScreen} />
+    <SpacesStack.Screen name="PlanEditor" component={PlanEditorScreen} />
   </SpacesStack.Navigator>
 );
 

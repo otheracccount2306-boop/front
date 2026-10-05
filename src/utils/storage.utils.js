@@ -16,6 +16,7 @@ export const STORAGE_KEYS = {
   cacheSpaces: `${PREFIX}cache_spaces`,
   cacheFaq: `${PREFIX}cache_faq`,
   cacheCalendar: `${PREFIX}cache_calendar`,
+  cachePlans: `${PREFIX}cache_plans`,
   cacheTs: `${PREFIX}cache_ts`,
   loginLock: `${PREFIX}login_lock`,
 };
@@ -25,7 +26,11 @@ const CACHE_KEYS = {
   spaces: STORAGE_KEYS.cacheSpaces,
   faq: STORAGE_KEYS.cacheFaq,
   calendar: STORAGE_KEYS.cacheCalendar,
+  plans: STORAGE_KEYS.cachePlans,
 };
+
+/** Prefijo de las claves con el detalle de cada plano (imagen y polígonos), una por plano. */
+const PLAN_DETAIL_PREFIX = `${PREFIX}cache_plan_`;
 
 /**
  * @description Lee un texto de AsyncStorage sin lanzar errores.
@@ -115,7 +120,7 @@ export const setJson = async (key, value) => {
  * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {'schedule'|'spaces'|'faq'|'calendar'} name - Nombre de la caché
+ * @param {'schedule'|'spaces'|'faq'|'calendar'|'plans'} name - Nombre de la caché
  * @param {Array} data - Datos a guardar
  * @returns {Promise<void>} Promesa resuelta al terminar la escritura
  */
@@ -130,12 +135,35 @@ export const saveCache = async (name, data) => {
  * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {'schedule'|'spaces'|'faq'|'calendar'} name - Nombre de la caché
+ * @param {'schedule'|'spaces'|'faq'|'calendar'|'plans'} name - Nombre de la caché
  * @returns {Promise<Array>} Datos guardados o un arreglo vacío
  */
 export const loadCache = async (name) => {
   const data = await getJson(CACHE_KEYS[name]);
   return Array.isArray(data) ? data : [];
+};
+
+/**
+ * @description Guarda el detalle de un plano (imagen y polígonos) para mostrar el mapa sin
+ *              conexión. Cada plano va en su propia clave para no superar el límite por registro
+ *              de AsyncStorage en Android.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @param {Object} plan - Plano completo devuelto por GET /campus/plans/{id}
+ * @returns {Promise<void>} Promesa resuelta al terminar la escritura
+ */
+export const savePlanDetail = async (plan) => {
+  await setJson(`${PLAN_DETAIL_PREFIX}${plan.id}`, plan);
+};
+
+/**
+ * @description Lee el detalle guardado de un plano.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @param {string} id - Identificador del plano
+ * @returns {Promise<Object|null>} Plano guardado, o null si no hay copia
+ */
+export const loadPlanDetail = async (id) => {
+  const plan = await getJson(`${PLAN_DETAIL_PREFIX}${id}`);
+  return plan && plan.id === id ? plan : null;
 };
 
 /**
@@ -149,7 +177,9 @@ export const loadCache = async (name) => {
 export const clearAll = async () => {
   const keys = Object.values(STORAGE_KEYS).filter((key) => key !== STORAGE_KEYS.loginLock);
   try {
-    await AsyncStorage.multiRemove(keys);
+    const stored = await AsyncStorage.getAllKeys();
+    const planKeys = (stored || []).filter((key) => key.startsWith(PLAN_DETAIL_PREFIX));
+    await AsyncStorage.multiRemove([...keys, ...planKeys]);
   } catch {
     return;
   }

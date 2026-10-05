@@ -49,13 +49,20 @@ module.exports = (env, argv) => {
           },
         },
         {
-          test: /\.(ttf|png|jpe?g|gif)$/,
+          // Hojas de estilo de Leaflet y Leaflet.draw, usadas por el editor de planos del panel.
+          test: /\.css$/,
+          use: ['style-loader', 'css-loader'],
+        },
+        {
+          test: /\.(ttf|png|jpe?g|gif|svg)$/,
           type: 'asset/resource',
         },
       ],
     },
     plugins: [
       new HtmlWebpackPlugin({ template: path.resolve(__dirname, 'web/index.html') }),
+      // Leaflet.draw es un plugin clásico que espera la variable global L.
+      new webpack.ProvidePlugin({ L: 'leaflet' }),
       new webpack.DefinePlugin({
         __DEV__: JSON.stringify(!isProduction),
         'process.env.API_BASE_URL': JSON.stringify(process.env.API_BASE_URL || ''),

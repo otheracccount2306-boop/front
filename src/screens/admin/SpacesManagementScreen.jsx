@@ -8,10 +8,12 @@ import StatusBadge from '../../components/admin/StatusBadge';
 import CategoryChips from '../../components/common/CategoryChips';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import ScreenContainer from '../../components/common/ScreenContainer';
+import SegmentedTabs from '../../components/common/SegmentedTabs';
 import useAdminActions from '../../hooks/useAdminActions';
 import useFlash from '../../hooks/useFlash';
 import useFocusRefresh from '../../hooks/useFocusRefresh';
 import useRemoteResource from '../../hooks/useRemoteResource';
+import { ADMIN_SPACES_TABS } from '../../utils/admin.utils';
 import { ALL_VALUE, SPACE_CHIPS, categoryLabel } from '../../utils/category.utils';
 
 /**
@@ -82,6 +84,7 @@ const SpacesManagementScreen = ({ navigation, route }) => {
 
   return (
     <ScreenContainer header={<AdminHeader title="Espacios" subtitle="Catálogo del campus" />}>
+      <SegmentedTabs items={ADMIN_SPACES_TABS} current="SpacesManagement" onChange={(name) => navigation.navigate(name)} />
       <CategoryChips chips={SPACE_CHIPS} selected={category} onSelect={setCategory} />
       <AdminListView
         data={spaces}
@@ -98,7 +101,9 @@ const SpacesManagementScreen = ({ navigation, route }) => {
           <AdminListItem
             title={item.nombre}
             subtitle={`${item.codigo} · ${categoryLabel(item.categoria)}`}
-            meta={[item.edificio, item.piso].filter(Boolean).join(' · ') || undefined}
+            meta={
+              [item.edificio, item.piso, item.geometria ? 'En el mapa' : null].filter(Boolean).join(' · ') || undefined
+            }
             badge={<StatusBadge status={item.activo ? 'ACTIVO' : 'INACTIVO'} />}
             actions={actionsFor(item)}
           />

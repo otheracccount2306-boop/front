@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<!--
+  Mapa del campus · UCC Santa Marta
+
+  Plantilla del mapa interactivo que la app muestra dentro de un WebView (móvil) o un iframe (web).
+  Funciona sin conexión: Leaflet se incrusta aquí al instalar dependencias (scripts/build-campus-map.js)
+  y la imagen del plano llega como data URL dentro de la configuración. No usa teselas, satélite ni GPS.
+
+  Marcadores que se reemplazan:
+    LEAFLET_CSS / LEAFLET_JS  → en build, con node_modules/leaflet/dist (campusMapTemplate.generated.js)
+    MAP_CONFIG                → en ejecución, con buildMapHtml(plan) (plano, polígonos y colores de la app)
+
+  Coordenadas: L.CRS.Simple con límites [[0, 0], [alto, ancho]]. Una unidad = un píxel del plano.
+  Los polígonos son GeoJSON Polygon con posiciones [x, y] (x desde la izquierda, y desde abajo).
+
+  API global (la app la llama con injectJavaScript o postMessage):
+    window.highlightSpace(uuid)  ilumina el polígono del espacio y centra la vista; devuelve true/false
+    window.clearHighlight()      quita la selección
+    window.fitPlan()             vuelve a mostrar el plano completo
+
+  Mensajes hacia la app ({ source: 'ucc-campus-map', type, payload }):
+    ready        { planId, spaces }   el mapa terminó de cargar
+    highlighted  { id }               se iluminó el espacio pedido
+    notFound     { id }               el UUID no está dibujado en este plano
+    spacePress   { id }               el estudiante tocó un salón
+    error        { message }
+-->
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Mapa del campus</title>
+    <style>
+      /*__LEAFLET_CSS__*/
+    </style>
+    <style>
+      html,
+      body,
+      #map {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--background, #f7f9f8);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .leaflet-container {
+        background: var(--background, #f7f9f8);
+      }
+      .leaflet-tooltip.space-label {
+        background: var(--white, #fff);
+        border: 1px solid var(--gray4, #e8e8e8);
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        color: var(--gray1, #3d3d3d);
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 6px;
+      }
+      .leaflet-tooltip.space-label.is-selected {
+        background: var(--primary, #007760);
+        border-color: var(--primary, #007760);
+        color: var(--white, #fff);
+        font-size: 13px;
+        padding: 4px 8px;
+      }
+      .leaflet-tooltip.space-label.is-selected::before {
+        border-top-color: var(--primary, #007760);
+      }
+      /* Pulso al iluminar: el trazo "late" tres veces para que el salón se encuentre de un vistazo. */
+      .space-pulse {
+        animation: space-pulse 0.7s ease-in-out 3;
+      }
+      @keyframes space-pulse {
+        0%,
+        100% {
+          stroke-width: 3px;
+          stroke-opacity: 1;
+        }
+        50% {
+          stroke-width: 10px;
+          stroke-opacity: 0.45;
+        }
+      }
+      .map-message {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        text-align: center;
+        color: var(--gray2, #6b6b6b);
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script>
+      /*__LEAFLET_JS__*/
+    </script>
+    <script>
+      (function () {
+        'use strict';
+
+        var CONFIG = /*__MAP_CONFIG__*/null;
+
+        var SOURCE_MAP = 'ucc-campus-map';
+        var SOURCE_APP = 'ucc-campus-app';
+
+        var map = null;
+        var layersById = {};
+        var selectedId = null;
+        var pendingId = null;
+        var ready = false;
+        var theme = {};
+
+        // ---- Comunicación con la app ------------------------------------------------------
+
+        function send(type, payload) {
+          var text = JSON.stringify({ source: SOURCE_MAP, type: type, payload: payload || {} });
+          if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+            window.ReactNativeWebView.postMessage(text);
+          } else if (window.parent && window.parent !== window) {
+            window.parent.postMessage(text, '*');
+          }
+        }
+
+        function onAppMessage(event) {
+          var data = event && event.data;
+          if (typeof data === 'string') {
+            try {
+              data = JSON.parse(data);
+            } catch (error) {
+              return;
+            }
+          }
+          if (!data || data.source !== SOURCE_APP) {
+            return;
+          }
+          if (data.type === 'highlight') {
+            window.highlightSpace(data.id);
+          } else if (data.type === 'clear') {
+            window.clearHighlight();
+          } else if (data.type === 'fit') {
+            window.fitPlan();
+          }
+        }
+
+        window.addEventListener('message', onAppMessage);
+        // Android (react-native-webview) entrega postMessage en document, no en window.
+        document.addEventListener('message', onAppMessage);
+
+        window.onerror = function (message) {
+          send('error', { message: String(message) });
+        };
+
+        // ---- Estilos de los polígonos -----------------------------------------------------
+
+        function idleStyle() {
+          return {
+            color: theme.primary,
+            weight: 1.5,
+            opacity: 0.9,
+            fillColor: theme.light,
+            fillOpacity: 0.18,
+          };
+        }
+
+        function selectedStyle() {
+          return {
+            color: theme.primary,
+            weight: 3,
+            opacity: 1,
+            fillColor: theme.accent,
+            fillOpacity: 0.55,
+          };
+        }
+
+        // Los nombres vienen del panel administrativo: se insertan como texto, nunca como HTML.
+        function label(text) {
+          var span = document.createElement('span');
+          span.textContent = text || '';
+          return span;
+        }
+
+        function setIdleTooltip(layer) {
+          layer.unbindTooltip();
+          layer.bindTooltip(label(layer.space.codigo || layer.space.nombre), {
+            direction: 'center',
+            className: 'space-label',
+          });
+        }
+
+        function setSelectedTooltip(layer) {
+          layer.unbindTooltip();
+          layer
+            .bindTooltip(label(layer.space.nombre || layer.space.codigo), {
+              permanent: true,
+              direction: 'top',
+              offset: [0, -6],
+              className: 'space-label is-selected',
+            })
+            .openTooltip();
+        }
+
+        function restartPulse(layer) {
+          var element = layer.getElement && layer.getElement();
+          if (!element) {
+            return;
+          }
+          element.classList.remove('space-pulse');
+          // Fuerza un reflow para que la animación vuelva a empezar si se ilumina el mismo salón.
+          void element.getBoundingClientRect();
+          element.classList.add('space-pulse');
+        }
+
+        // ---- API global ---------------------------------------------------------------------
+
+        /**
+         * Ilumina el salón con el UUID recibido y centra la vista sobre él.
+         * Si el mapa aún no termina de cargar, guarda el pedido y lo atiende al estar listo.
+         */
+        window.highlightSpace = function (id, options) {
+          var spaceId = String(id || '').trim().toLowerCase();
+          if (!ready) {
+            pendingId = spaceId;
+            return false;
+          }
+          if (selectedId && layersById[selectedId]) {
+            var previous = layersById[selectedId];
+            previous.setStyle(idleStyle());
+            setIdleTooltip(previous);
+          }
+          selectedId = null;
+
+          var layer = layersById[spaceId];
+          if (!layer) {
+            send('notFound', { id: spaceId });
+            return false;
+          }
+
+          selectedId = spaceId;
+          layer.setStyle(selectedStyle());
+          layer.bringToFront();
+          setSelectedTooltip(layer);
+          restartPulse(layer);
+
+          if (!options || options.center !== false) {
+            map.flyToBounds(layer.getBounds(), {
+              padding: [48, 48],
+              maxZoom: Math.min(map.getMaxZoom(), 1),
+              duration: 0.6,
+            });
+          }
+          send('highlighted', { id: spaceId });
+          return true;
+        };
+
+        window.clearHighlight = function () {
+          if (selectedId && layersById[selectedId]) {
+            layersById[selectedId].setStyle(idleStyle());
+            setIdleTooltip(layersById[selectedId]);
+          }
+          selectedId = null;
+          pendingId = null;
+        };
+
+        window.fitPlan = function () {
+          if (map) {
+            map.fitBounds(map.options.planBounds);
+          }
+        };
+
+        // ---- Inicialización -----------------------------------------------------------------
+
+        function showMessage(text) {
+          var box = document.createElement('div');
+          box.className = 'map-message';
+          box.textContent = text;
+          document.body.appendChild(box);
+        }
+
+        function applyTheme(colors) {
+          theme = colors || {};
+          Object.keys(theme).forEach(function (name) {
+            document.documentElement.style.setProperty('--' + name, theme[name]);
+          });
+        }
+
+        function init() {
+          if (typeof L === 'undefined') {
+            showMessage('No se pudo cargar el mapa.');
+            send('error', { message: 'Leaflet no está disponible' });
+            return;
+          }
+          if (!CONFIG || !CONFIG.plan || !CONFIG.plan.imagen) {
+            showMessage('Este plano todavía no está disponible.');
+            send('error', { message: 'Falta la configuración del plano' });
+            return;
+          }
+          applyTheme(CONFIG.theme);
+
+          var plan = CONFIG.plan;
+          var bounds = L.latLngBounds([0, 0], [plan.alto, plan.ancho]);
+
+          map = L.map('map', {
+            crs: L.CRS.Simple,
+            planBounds: bounds,
+            minZoom: -6,
+            maxZoom: 3,
+            zoomSnap: 0.25,
+            zoomDelta: 0.5,
+            attributionControl: false,
+            maxBounds: bounds.pad(0.25),
+            maxBoundsViscosity: 0.9,
+            bounceAtZoomLimits: false,
+          });
+
+          L.imageOverlay(plan.imagen, bounds).addTo(map);
+          map.fitBounds(bounds);
+          // No dejar alejar más allá del plano completo.
+          map.setMinZoom(map.getZoom() - 0.5);
+
+          (plan.espacios || []).forEach(function (space) {
+            if (!space || !space.geometria || !space.id) {
+              return;
+            }
+            var group = L.geoJSON(space.geometria, { style: idleStyle });
+            var layer = group.getLayers()[0];
+            if (!layer) {
+              return;
+            }
+            var id = String(space.id).toLowerCase();
+            layer.space = space;
+            setIdleTooltip(layer);
+            layer.on('click', function () {
+              window.highlightSpace(id, { center: false });
+              send('spacePress', { id: id });
+            });
+            layer.addTo(map);
+            layersById[id] = layer;
+          });
+
+          window.addEventListener('resize', function () {
+            map.invalidateSize();
+          });
+
+          ready = true;
+          send('ready', { planId: plan.id, spaces: Object.keys(layersById).length });
+
+          if (pendingId) {
+            var queued = pendingId;
+            pendingId = null;
+            window.highlightSpace(queued);
+          }
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init);
+        } else {
+          init();
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -9,7 +9,7 @@ import { getErrorMessage } from '../utils/error.utils';
  * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {'schedule'|'spaces'|'faq'|'calendar'} cacheName - Nombre de la caché en el store
+ * @param {'schedule'|'spaces'|'faq'|'calendar'|'plans'} cacheName - Nombre de la caché en el store
  * @param {Function} fetcher - Función asíncrona estable que devuelve la lista completa
  * @returns {{ data: Array, loading: boolean, error: string|null, refresh: Function }} Datos en caché y estado de la actualización
  */
