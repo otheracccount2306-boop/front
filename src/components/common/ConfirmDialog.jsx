@@ -1,8 +1,8 @@
-import React from 'react';
-import { Modal, StyleSheet, Text, View } from 'react-native';
-import colors from '../../theme/colors';
-import { cardShadow, fontSizes, radius, spacing } from '../../theme/typography';
-import AppButton from './AppButton';
+import React from "react";
+import { Modal, StyleSheet, Text, View } from "react-native";
+import colors from "../../theme/colors";
+import { cardShadow, fontSizes, radius, spacing } from "../../theme/typography";
+import AppButton from "./AppButton";
 
 /**
  * @description Diálogo de confirmación propio. Reemplaza a Alert.alert, que no funciona en la
@@ -18,21 +18,45 @@ import AppButton from './AppButton';
  * @param {Function} props.onConfirm - Se ejecuta al confirmar
  * @param {Function} props.onCancel - Se ejecuta al cancelar
  * @param {boolean} [props.loading] - Muestra carga en el botón de confirmación
+ * @param {boolean} [props.confirmDisabled] - Deshabilita el botón de confirmación
+ * @param {React.ReactNode} [props.children] - Contenido extra debajo del mensaje (por ejemplo, un campo)
  * @returns {React.JSX.Element} Diálogo modal
  */
-const ConfirmDialog = ({ visible, title, message, confirmLabel, onConfirm, onCancel, loading = false }) => (
-  <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+const ConfirmDialog = ({
+  visible,
+  title,
+  message,
+  confirmLabel,
+  onConfirm,
+  onCancel,
+  loading = false,
+  confirmDisabled = false,
+  children,
+}) => (
+  <Modal
+    visible={visible}
+    transparent
+    animationType="fade"
+    onRequestClose={onCancel}
+  >
     <View style={styles.overlay}>
       <View style={styles.dialog}>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.message}>{message}</Text>
+        {children}
         <View style={styles.actions}>
-          <AppButton label="Cancelar" variant="outline" onPress={onCancel} style={styles.action} />
+          <AppButton
+            label="Cancelar"
+            variant="outline"
+            onPress={onCancel}
+            style={styles.action}
+          />
           <AppButton
             label={confirmLabel}
             variant="danger"
             onPress={onConfirm}
             loading={loading}
+            disabled={confirmDisabled}
             style={styles.action}
           />
         </View>
@@ -45,12 +69,12 @@ const styles = StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: colors.overlay,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: spacing.xl,
   },
   dialog: {
-    width: '100%',
+    width: "100%",
     maxWidth: 400,
     backgroundColor: colors.white,
     borderRadius: radius.card,
@@ -59,7 +83,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fontSizes.section,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.gray1,
   },
   message: {
@@ -69,7 +93,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   actions: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   action: {
     flex: 1,

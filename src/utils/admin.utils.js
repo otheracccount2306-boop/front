@@ -1,10 +1,10 @@
-import { categoryLabel } from './category.utils';
-import { extractServerMessage, getErrorMessage } from './error.utils';
-import { parseIsoDate, startOfDay, toIsoDate } from './date.utils';
+import { categoryLabel } from "./category.utils";
+import { extractServerMessage, getErrorMessage } from "./error.utils";
+import { parseIsoDate, startOfDay, toIsoDate } from "./date.utils";
 
 const ADMIN_ERROR_OVERRIDES = {
-  403: 'No tienes permisos para esta acción',
-  404: 'El registro no existe o ya fue eliminado',
+  403: "No tienes permisos para esta acción",
+  404: "El registro no existe o ya fue eliminado",
 };
 
 /**
@@ -15,37 +15,54 @@ const ADMIN_ERROR_OVERRIDES = {
  * @param {string[]} values - Códigos de categoría
  * @returns {Array<{ value: string, label: string }>} Opciones para AdminFormSelect
  */
-const optionsFrom = (values) => values.map((value) => ({ value, label: categoryLabel(value) }));
+const optionsFrom = (values) =>
+  values.map((value) => ({ value, label: categoryLabel(value) }));
 
 /**
  * @description Opciones de categoría de noticias.
  * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
  */
-export const NEWS_CATEGORY_OPTIONS = optionsFrom(['INSTITUCIONAL', 'ACADEMICO', 'BIENESTAR']);
+export const NEWS_CATEGORY_OPTIONS = optionsFrom([
+  "INSTITUCIONAL",
+  "ACADEMICO",
+  "BIENESTAR",
+]);
 
 /**
  * @description Opciones de categoría de eventos institucionales.
  * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
  */
-export const EVENT_CATEGORY_OPTIONS = optionsFrom(['ACADEMICO', 'INSTITUCIONAL', 'DEPORTE', 'CULTURA']);
+export const EVENT_CATEGORY_OPTIONS = optionsFrom([
+  "ACADEMICO",
+  "INSTITUCIONAL",
+  "DEPORTE",
+  "CULTURA",
+]);
 
 /**
  * @description Opciones de categoría de servicios de bienestar.
  * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
  */
-export const WELLBEING_CATEGORY_OPTIONS = optionsFrom(['PSICOLOGIA', 'SALUD', 'DEPORTE', 'CULTURA', 'PASTORAL', 'BECAS']);
+export const WELLBEING_CATEGORY_OPTIONS = optionsFrom([
+  "PSICOLOGIA",
+  "SALUD",
+  "DEPORTE",
+  "CULTURA",
+  "PASTORAL",
+  "BECAS",
+]);
 
 /**
  * @description Opciones de categoría de espacios del campus.
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  */
 export const SPACE_CATEGORY_OPTIONS = optionsFrom([
-  'AULA',
-  'LABORATORIO',
-  'OFICINA',
-  'BIBLIOTECA',
-  'CAFETERIA',
-  'AREA_COMUN',
+  "AULA",
+  "LABORATORIO",
+  "OFICINA",
+  "BIBLIOTECA",
+  "CAFETERIA",
+  "AREA_COMUN",
 ]);
 
 /**
@@ -53,8 +70,8 @@ export const SPACE_CATEGORY_OPTIONS = optionsFrom([
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  */
 export const ADMIN_SPACES_TABS = [
-  { name: 'SpacesManagement', label: 'Espacios' },
-  { name: 'PlansManagement', label: 'Planos' },
+  { name: "SpacesManagement", label: "Espacios" },
+  { name: "PlansManagement", label: "Planos" },
 ];
 
 /**
@@ -62,11 +79,11 @@ export const ADMIN_SPACES_TABS = [
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  */
 export const CALENDAR_CATEGORY_OPTIONS = optionsFrom([
-  'INICIO_CLASES',
-  'EXAMENES',
-  'RECESOS',
-  'INSCRIPCIONES',
-  'EVENTOS_ESPECIALES',
+  "INICIO_CLASES",
+  "EXAMENES",
+  "RECESOS",
+  "INSCRIPCIONES",
+  "EVENTOS_ESPECIALES",
 ]);
 
 /**
@@ -74,12 +91,12 @@ export const CALENDAR_CATEGORY_OPTIONS = optionsFrom([
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  */
 export const SUBJECT_DAYS = [
-  { value: 'LUNES', label: 'Lun' },
-  { value: 'MARTES', label: 'Mar' },
-  { value: 'MIERCOLES', label: 'Mié' },
-  { value: 'JUEVES', label: 'Jue' },
-  { value: 'VIERNES', label: 'Vie' },
-  { value: 'SABADO', label: 'Sáb' },
+  { value: "LUNES", label: "Lun" },
+  { value: "MARTES", label: "Mar" },
+  { value: "MIERCOLES", label: "Mié" },
+  { value: "JUEVES", label: "Jue" },
+  { value: "VIERNES", label: "Vie" },
+  { value: "SABADO", label: "Sáb" },
 ];
 
 /**
@@ -87,9 +104,19 @@ export const SUBJECT_DAYS = [
  * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
  */
 export const SERVICE_TYPES = [
-  { name: 'wellbeing', label: 'Bienestar', singular: 'servicio de bienestar', feminine: false },
-  { name: 'department', label: 'Directorio', singular: 'dependencia', feminine: true },
-  { name: 'faq', label: 'FAQ', singular: 'pregunta frecuente', feminine: true },
+  {
+    name: "wellbeing",
+    label: "Bienestar",
+    singular: "servicio de bienestar",
+    feminine: false,
+  },
+  {
+    name: "department",
+    label: "Directorio",
+    singular: "dependencia",
+    feminine: true,
+  },
+  { name: "faq", label: "FAQ", singular: "pregunta frecuente", feminine: true },
 ];
 
 /**
@@ -116,9 +143,9 @@ export const getSubjectConflictMessage = (error) => {
   if (!error || !error.response || error.response.status !== 409) {
     return null;
   }
-  return /aula/i.test(extractServerMessage(error) || '')
-    ? 'Ya existe una clase en esa aula en ese horario'
-    : 'El código ya existe, usa uno diferente';
+  return /aula/i.test(extractServerMessage(error) || "")
+    ? "Ya existe una clase en esa aula en ese horario"
+    : "El código ya existe, usa uno diferente";
 };
 
 /**
@@ -128,7 +155,8 @@ export const getSubjectConflictMessage = (error) => {
  * @param {string} value - Hora escrita por el usuario
  * @returns {boolean} true si es una hora válida
  */
-export const isValidTimeInput = (value) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || ''));
+export const isValidTimeInput = (value) =>
+  /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || ""));
 
 /**
  * @description Valida que un texto sea una URL http o https.
@@ -136,7 +164,8 @@ export const isValidTimeInput = (value) => /^([01]\d|2[0-3]):[0-5]\d$/.test(Stri
  * @param {string} value - Texto a validar
  * @returns {boolean} true si empieza con http:// o https:// y tiene contenido después
  */
-export const isValidHttpUrl = (value) => /^https?:\/\/\S+$/.test(String(value || ''));
+export const isValidHttpUrl = (value) =>
+  /^https?:\/\/\S+$/.test(String(value || ""));
 
 /**
  * @description Indica si una fecha escrita como YYYY-MM-DD es hoy o posterior.
@@ -145,7 +174,8 @@ export const isValidHttpUrl = (value) => /^https?:\/\/\S+$/.test(String(value ||
  * @param {Date} now - Fecha de referencia, hoy por defecto
  * @returns {boolean} true si la fecha no es anterior a hoy
  */
-export const isTodayOrFuture = (value, now = new Date()) => startOfDay(parseIsoDate(value)) >= startOfDay(now);
+export const isTodayOrFuture = (value, now = new Date()) =>
+  startOfDay(parseIsoDate(value)) >= startOfDay(now);
 
 /**
  * @description Separa una fecha-hora ISO en fecha (YYYY-MM-DD) y hora (HH:mm) para el formulario.
@@ -155,11 +185,11 @@ export const isTodayOrFuture = (value, now = new Date()) => startOfDay(parseIsoD
  */
 export const splitDateTime = (iso) => {
   if (!iso) {
-    return { date: '', time: '' };
+    return { date: "", time: "" };
   }
   const date = parseIsoDate(iso);
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
   return { date: toIsoDate(date), time: `${hours}:${minutes}` };
 };
 
@@ -181,8 +211,8 @@ export const joinDateTime = (date, time) => `${date}T${time}:00`;
  * @returns {string|null} Texto recortado, o null si está vacío
  */
 export const emptyToNull = (value) => {
-  const text = String(value || '').trim();
-  return text === '' ? null : text;
+  const text = String(value || "").trim();
+  return text === "" ? null : text;
 };
 
 /**
@@ -194,4 +224,16 @@ export const emptyToNull = (value) => {
 export const formatDays = (days) =>
   SUBJECT_DAYS.filter((day) => days.includes(day.value))
     .map((day) => day.label)
-    .join(', ');
+    .join(", ");
+
+/**
+ * @description Segunda verificación para eliminar un plano: el texto escrito debe ser el nombre del
+ *              plano, sin importar mayúsculas ni espacios en los extremos (igual que en el backend).
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @param {string} typed - Texto escrito por el administrador
+ * @param {string} name - Nombre del plano
+ * @returns {boolean} true si coincide
+ */
+export const matchesPlanName = (typed, name) =>
+  Boolean(typed && name) &&
+  typed.trim().toLocaleLowerCase("es") === name.trim().toLocaleLowerCase("es");
