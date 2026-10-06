@@ -1,11 +1,6 @@
-import apiClient from "./client";
+import apiClient from './client';
 
-const SERVICE_PATHS = {
-  wellbeing: "wellbeing",
-  department: "departments",
-  departments: "departments",
-  faq: "faq",
-};
+const SERVICE_PATHS = { wellbeing: 'wellbeing', department: 'departments', departments: 'departments', faq: 'faq' };
 
 /**
  * @description Elimina de los parámetros los valores vacíos para no enviarlos al backend.
@@ -16,11 +11,7 @@ const SERVICE_PATHS = {
  * @returns {Object} Parámetros sin valores indefinidos, nulos o vacíos
  */
 const pickParams = (params) =>
-  Object.fromEntries(
-    Object.entries(params).filter(
-      ([, value]) => value !== undefined && value !== null && value !== "",
-    ),
-  );
+  Object.fromEntries(Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== ''));
 
 /**
  * @description Traduce el tipo de servicio del panel (wellbeing, department o faq) al segmento
@@ -41,11 +32,7 @@ const servicePath = (type) => SERVICE_PATHS[type] || type;
  * @returns {Promise<Object>} Página de usuarios
  */
 export const listUsers = async ({ search, active, page = 1 } = {}) =>
-  (
-    await apiClient.get("/admin/users", {
-      params: pickParams({ page, search, active }),
-    })
-  ).data.data;
+  (await apiClient.get('/admin/users', { params: pickParams({ page, search, active }) })).data.data;
 
 /**
  * @description Activa o desactiva la cuenta de un usuario.
@@ -64,8 +51,7 @@ export const updateUserStatus = async (id, activo) =>
  * @param {string} rol - Nuevo rol
  * @returns {Promise<Object>} Usuario actualizado
  */
-export const updateUserRole = async (id, rol) =>
-  (await apiClient.put(`/admin/users/${id}/role`, { rol })).data.data;
+export const updateUserRole = async (id, rol) => (await apiClient.put(`/admin/users/${id}/role`, { rol })).data.data;
 
 /**
  * @description Elimina definitivamente a un usuario (derecho de supresión, Ley 1581 de 2012).
@@ -82,8 +68,7 @@ export const deleteUser = async (id) => {
  * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
  * @returns {Promise<Array>} Roles con su descripción
  */
-export const listRoles = async () =>
-  (await apiClient.get("/admin/roles")).data.data;
+export const listRoles = async () => (await apiClient.get('/admin/roles')).data.data;
 
 /**
  * @description Lista noticias de cualquier estado, incluidos borradores y archivadas.
@@ -95,11 +80,7 @@ export const listRoles = async () =>
  * @returns {Promise<Object>} Página de noticias completas
  */
 export const listAllNews = async ({ category, status, page = 1 } = {}) =>
-  (
-    await apiClient.get("/admin/news", {
-      params: pickParams({ category, status, page }),
-    })
-  ).data.data;
+  (await apiClient.get('/admin/news', { params: pickParams({ category, status, page }) })).data.data;
 
 /**
  * @description Crea una noticia como borrador o publicada.
@@ -107,8 +88,7 @@ export const listAllNews = async ({ category, status, page = 1 } = {}) =>
  * @param {Object} data - Datos de la noticia (titulo, resumen, contenido, categoria, imagenUrl, estado)
  * @returns {Promise<Object>} Noticia creada
  */
-export const createNews = async (data) =>
-  (await apiClient.post("/admin/news", data)).data.data;
+export const createNews = async (data) => (await apiClient.post('/admin/news', data)).data.data;
 
 /**
  * @description Actualiza una noticia. Una noticia publicada no puede volver a borrador.
@@ -117,8 +97,7 @@ export const createNews = async (data) =>
  * @param {Object} data - Datos de la noticia
  * @returns {Promise<Object>} Noticia actualizada
  */
-export const updateNews = async (id, data) =>
-  (await apiClient.put(`/admin/news/${id}`, data)).data.data;
+export const updateNews = async (id, data) => (await apiClient.put(`/admin/news/${id}`, data)).data.data;
 
 /**
  * @description Archiva lógicamente una noticia (estado ARCHIVADO).
@@ -140,11 +119,7 @@ export const deleteNews = async (id) => {
  * @returns {Promise<Object>} Página de eventos
  */
 export const listAllEvents = async ({ category, status, page = 1 } = {}) =>
-  (
-    await apiClient.get("/admin/events", {
-      params: pickParams({ category, status, page }),
-    })
-  ).data.data;
+  (await apiClient.get('/admin/events', { params: pickParams({ category, status, page }) })).data.data;
 
 /**
  * @description Crea un evento institucional.
@@ -152,8 +127,7 @@ export const listAllEvents = async ({ category, status, page = 1 } = {}) =>
  * @param {Object} data - Datos del evento (nombre, descripcion, categoria, lugar, fechaHora, cupos)
  * @returns {Promise<Object>} Evento creado
  */
-export const createEvent = async (data) =>
-  (await apiClient.post("/admin/events", data)).data.data;
+export const createEvent = async (data) => (await apiClient.post('/admin/events', data)).data.data;
 
 /**
  * @description Actualiza un evento institucional.
@@ -162,8 +136,7 @@ export const createEvent = async (data) =>
  * @param {Object} data - Datos del evento, incluido el estado ACTIVO o CANCELADO
  * @returns {Promise<Object>} Evento actualizado
  */
-export const updateEvent = async (id, data) =>
-  (await apiClient.put(`/admin/events/${id}`, data)).data.data;
+export const updateEvent = async (id, data) => (await apiClient.put(`/admin/events/${id}`, data)).data.data;
 
 /**
  * @description Cancela lógicamente un evento activo (estado CANCELADO).
@@ -184,11 +157,7 @@ export const deleteEvent = async (id) => {
  * @returns {Promise<Array>} Recursos de cualquier estado
  */
 export const listAllServices = async (type, { category } = {}) =>
-  (
-    await apiClient.get(`/admin/services/${servicePath(type)}`, {
-      params: pickParams({ category }),
-    })
-  ).data.data;
+  (await apiClient.get(`/admin/services/${servicePath(type)}`, { params: pickParams({ category }) })).data.data;
 
 /**
  * @description Crea un servicio de bienestar, una dependencia o una pregunta frecuente.
@@ -198,8 +167,7 @@ export const listAllServices = async (type, { category } = {}) =>
  * @returns {Promise<Object>} Recurso creado
  */
 export const createService = async (type, data) =>
-  (await apiClient.post(`/admin/services/${servicePath(type)}`, data)).data
-    .data;
+  (await apiClient.post(`/admin/services/${servicePath(type)}`, data)).data.data;
 
 /**
  * @description Actualiza un servicio, dependencia o pregunta frecuente, incluido su estado activo.
@@ -210,8 +178,7 @@ export const createService = async (type, data) =>
  * @returns {Promise<Object>} Recurso actualizado
  */
 export const updateService = async (type, id, data) =>
-  (await apiClient.put(`/admin/services/${servicePath(type)}/${id}`, data)).data
-    .data;
+  (await apiClient.put(`/admin/services/${servicePath(type)}/${id}`, data)).data.data;
 
 /**
  * @description Elimina lógicamente un servicio, dependencia o pregunta frecuente.
@@ -232,11 +199,7 @@ export const deleteService = async (type, id) => {
  * @returns {Promise<Array>} Espacios de cualquier estado
  */
 export const listAllSpaces = async ({ category } = {}) =>
-  (
-    await apiClient.get("/admin/campus/spaces", {
-      params: pickParams({ category }),
-    })
-  ).data.data;
+  (await apiClient.get('/admin/campus/spaces', { params: pickParams({ category }) })).data.data;
 
 /**
  * @description Crea un espacio del campus.
@@ -244,8 +207,7 @@ export const listAllSpaces = async ({ category } = {}) =>
  * @param {Object} data - Datos del espacio
  * @returns {Promise<Object>} Espacio creado
  */
-export const createSpace = async (data) =>
-  (await apiClient.post("/admin/campus/spaces", data)).data.data;
+export const createSpace = async (data) => (await apiClient.post('/admin/campus/spaces', data)).data.data;
 
 /**
  * @description Actualiza un espacio del campus, incluido su estado activo.
@@ -254,8 +216,7 @@ export const createSpace = async (data) =>
  * @param {Object} data - Datos del espacio
  * @returns {Promise<Object>} Espacio actualizado
  */
-export const updateSpace = async (id, data) =>
-  (await apiClient.put(`/admin/campus/spaces/${id}`, data)).data.data;
+export const updateSpace = async (id, data) => (await apiClient.put(`/admin/campus/spaces/${id}`, data)).data.data;
 
 /**
  * @description Elimina lógicamente un espacio del campus.
@@ -272,8 +233,7 @@ export const deleteSpace = async (id) => {
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @returns {Promise<Array>} Planos con la cantidad de espacios dibujados
  */
-export const listAllPlans = async () =>
-  (await apiClient.get("/admin/campus/plans")).data.data;
+export const listAllPlans = async () => (await apiClient.get('/admin/campus/plans')).data.data;
 
 /**
  * @description Obtiene un plano de cualquier estado con su imagen y todos sus polígonos.
@@ -281,8 +241,7 @@ export const listAllPlans = async () =>
  * @param {string} id - Identificador del plano
  * @returns {Promise<Object>} Plano completo para el editor
  */
-export const getAdminPlan = async (id) =>
-  (await apiClient.get(`/admin/campus/plans/${id}`)).data.data;
+export const getAdminPlan = async (id) => (await apiClient.get(`/admin/campus/plans/${id}`)).data.data;
 
 /**
  * @description Crea un plano. La imagen viaja como data URL y el servidor lee sus dimensiones.
@@ -290,9 +249,7 @@ export const getAdminPlan = async (id) =>
  * @param {Object} data - nombre, edificio, piso, imagen, ancho, alto y activo
  * @returns {Promise<Object>} Plano creado
  */
-export const createPlan = async (data) =>
-  (await apiClient.post("/admin/campus/plans", data, { timeout: 60000 })).data
-    .data;
+export const createPlan = async (data) => (await apiClient.post('/admin/campus/plans', data, { timeout: 60000 })).data.data;
 
 /**
  * @description Actualiza un plano; imagen null conserva la actual.
@@ -302,8 +259,7 @@ export const createPlan = async (data) =>
  * @returns {Promise<Object>} Plano actualizado
  */
 export const updatePlan = async (id, data) =>
-  (await apiClient.put(`/admin/campus/plans/${id}`, data, { timeout: 60000 }))
-    .data.data;
+  (await apiClient.put(`/admin/campus/plans/${id}`, data, { timeout: 60000 })).data.data;
 
 /**
  * @description Elimina un plano de forma definitiva, con su imagen. Los espacios dibujados sobre él
@@ -315,11 +271,7 @@ export const updatePlan = async (id, data) =>
  * @returns {Promise<string>} Mensaje del servidor con los espacios que quedaron sin ubicar
  */
 export const deletePlan = async (id, confirmacion) =>
-  (
-    await apiClient.delete(`/admin/campus/plans/${id}/permanent`, {
-      params: { confirmacion },
-    })
-  ).data.message;
+  (await apiClient.delete(`/admin/campus/plans/${id}/permanent`, { params: { confirmacion } })).data.message;
 
 /**
  * @description Guarda el polígono GeoJSON de un espacio dibujado sobre un plano.
@@ -330,12 +282,7 @@ export const deletePlan = async (id, confirmacion) =>
  * @returns {Promise<Object>} Espacio actualizado
  */
 export const saveSpaceGeometry = async (spaceId, planoId, geometria) =>
-  (
-    await apiClient.put(`/admin/campus/spaces/${spaceId}/geometry`, {
-      planoId,
-      geometria,
-    })
-  ).data.data;
+  (await apiClient.put(`/admin/campus/spaces/${spaceId}/geometry`, { planoId, geometria })).data.data;
 
 /**
  * @description Quita el polígono de un espacio.
@@ -344,8 +291,7 @@ export const saveSpaceGeometry = async (spaceId, planoId, geometria) =>
  * @returns {Promise<Object>} Espacio sin ubicación en el mapa
  */
 export const clearSpaceGeometry = async (spaceId) =>
-  (await apiClient.delete(`/admin/campus/spaces/${spaceId}/geometry`)).data
-    .data;
+  (await apiClient.delete(`/admin/campus/spaces/${spaceId}/geometry`)).data.data;
 
 /**
  * @description Lista las asignaturas, activas e inactivas, opcionalmente de un periodo académico.
@@ -355,11 +301,7 @@ export const clearSpaceGeometry = async (spaceId) =>
  * @returns {Promise<Array>} Asignaturas
  */
 export const listSubjects = async ({ period } = {}) =>
-  (
-    await apiClient.get("/admin/academic/subjects", {
-      params: pickParams({ period }),
-    })
-  ).data.data;
+  (await apiClient.get('/admin/academic/subjects', { params: pickParams({ period }) })).data.data;
 
 /**
  * @description Crea una asignatura.
@@ -367,8 +309,7 @@ export const listSubjects = async ({ period } = {}) =>
  * @param {Object} data - Datos de la asignatura; dias es un arreglo de días en mayúsculas
  * @returns {Promise<Object>} Asignatura creada
  */
-export const createSubject = async (data) =>
-  (await apiClient.post("/admin/academic/subjects", data)).data.data;
+export const createSubject = async (data) => (await apiClient.post('/admin/academic/subjects', data)).data.data;
 
 /**
  * @description Actualiza una asignatura, incluido su estado activo.
@@ -398,11 +339,7 @@ export const deleteSubject = async (id) => {
  * @returns {Promise<Array>} Eventos del calendario
  */
 export const listCalendarEvents = async ({ category } = {}) =>
-  (
-    await apiClient.get("/academic/calendar", {
-      params: pickParams({ category }),
-    })
-  ).data.data;
+  (await apiClient.get('/academic/calendar', { params: pickParams({ category }) })).data.data;
 
 /**
  * @description Crea un evento del calendario académico.
@@ -410,8 +347,7 @@ export const listCalendarEvents = async ({ category } = {}) =>
  * @param {Object} data - Datos del evento (nombre, descripcion, categoria, fechaInicio, fechaFin)
  * @returns {Promise<Object>} Evento creado
  */
-export const createCalendarEvent = async (data) =>
-  (await apiClient.post("/admin/academic/calendar", data)).data.data;
+export const createCalendarEvent = async (data) => (await apiClient.post('/admin/academic/calendar', data)).data.data;
 
 /**
  * @description Actualiza un evento del calendario académico.

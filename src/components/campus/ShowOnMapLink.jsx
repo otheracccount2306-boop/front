@@ -1,8 +1,8 @@
-import React from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
-import colors from "../../theme/colors";
-import { fontSizes, spacing } from "../../theme/typography";
-import AppIcon from "../common/AppIcon";
+import React from 'react';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import colors from '../../theme/colors';
+import { fontSizes, spacing } from '../../theme/typography';
+import AppIcon from '../common/AppIcon';
 
 /**
  * @description Enlace compacto "Ver en mapa" para abrir un espacio en el mapa del campus. Se usa
@@ -14,7 +14,7 @@ import AppIcon from "../common/AppIcon";
  * @param {Object} [props.style] - Estilo adicional
  * @returns {React.JSX.Element} Enlace al mapa
  */
-const ShowOnMapLink = ({ onPress, label = "Ver en mapa", style }) => (
+const ShowOnMapLink = ({ onPress, label = 'Ver en mapa', style }) => (
   <Pressable
     onPress={onPress}
     hitSlop={8}
@@ -29,9 +29,9 @@ const ShowOnMapLink = ({ onPress, label = "Ver en mapa", style }) => (
 
 const styles = StyleSheet.create({
   link: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "flex-start",
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
     borderWidth: 1,
     borderColor: colors.primary,
     borderRadius: 14,
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   text: {
     color: colors.primary,
     fontSize: fontSizes.small,
-    fontWeight: "700",
+    fontWeight: '700',
     marginLeft: spacing.xs,
   },
 });

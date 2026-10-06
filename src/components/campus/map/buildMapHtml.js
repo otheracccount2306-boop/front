@@ -1,13 +1,13 @@
-import colors from "../../../theme/colors";
-import template from "./campusMapTemplate.generated";
+import colors from '../../../theme/colors';
+import template from './campusMapTemplate.generated';
 
-const CONFIG_MARKER = "/*__MAP_CONFIG__*/null";
+const CONFIG_MARKER = '/*__MAP_CONFIG__*/null';
 
 /** Origen de los mensajes que la app envía al mapa; el mapa ignora cualquier otro. */
-export const APP_MESSAGE_SOURCE = "ucc-campus-app";
+export const APP_MESSAGE_SOURCE = 'ucc-campus-app';
 
 /** Origen de los mensajes que el mapa envía a la app. */
-export const MAP_MESSAGE_SOURCE = "ucc-campus-map";
+export const MAP_MESSAGE_SOURCE = 'ucc-campus-map';
 
 /**
  * @description Serializa un valor para incrustarlo dentro de una etiqueta script sin que un texto
@@ -18,9 +18,9 @@ export const MAP_MESSAGE_SOURCE = "ucc-campus-map";
  */
 export const toScriptJson = (value) =>
   JSON.stringify(value)
-    .replace(/</g, "\\u003c")
-    .replace(/\u2028/g, "\\u2028")
-    .replace(/\u2029/g, "\\u2029");
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
 
 /**
  * @description Arma el HTML autocontenido del mapa: Leaflet, el fondo vectorial del campus (lote y
@@ -74,18 +74,14 @@ export const buildMapHtml = (plan) => {
  */
 export const parseMapMessage = (raw) => {
   let data = raw;
-  if (typeof raw === "string") {
+  if (typeof raw === 'string') {
     try {
       data = JSON.parse(raw);
     } catch {
       return null;
     }
   }
-  if (
-    !data ||
-    data.source !== MAP_MESSAGE_SOURCE ||
-    typeof data.type !== "string"
-  ) {
+  if (!data || data.source !== MAP_MESSAGE_SOURCE || typeof data.type !== 'string') {
     return null;
   }
   return { type: data.type, payload: data.payload || {} };
