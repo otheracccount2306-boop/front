@@ -23,8 +23,9 @@ export const toScriptJson = (value) =>
     .replace(/\u2029/g, '\\u2029');
 
 /**
- * @description Arma el HTML autocontenido del mapa de un plano: Leaflet, la imagen del plano (data
- *              URL), los polígonos y los colores de la app. No necesita conexión para mostrarse.
+ * @description Arma el HTML autocontenido del mapa: Leaflet, la imagen del plano (data URL), los
+ *              salones de todos los pisos, la malla de caminos y los colores de la app. No necesita
+ *              conexión para mostrarse.
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @param {Object} plan - Plano con imagen, ancho, alto y espacios (respuesta de GET /campus/plans/{id})
  * @returns {string} Documento HTML para el WebView o el iframe
@@ -42,11 +43,16 @@ export const buildMapHtml = (plan) => {
         nombre: space.nombre,
         codigo: space.codigo,
         categoria: space.categoria,
+        edificio: space.edificio || null,
+        piso: space.piso || null,
         geometria: space.geometria,
       })),
+      navegacion: plan.navegacion || null,
     },
     theme: {
       primary: colors.primary,
+      primaryDark: colors.primaryDark,
+      aqua: colors.aqua,
       light: colors.light,
       accent: colors.accent,
       background: colors.background,

@@ -85,6 +85,7 @@ const PlanEditorScreen = ({ navigation, route }) => {
   const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState('PENDING');
   const [query, setQuery] = useState('');
+  const [floor, setFloor] = useState('ALL');
   const [status, setStatus] = useState({ kind: 'idle', message: null });
 
   const load = useCallback(async () => {
@@ -102,13 +103,27 @@ const PlanEditorScreen = ({ navigation, route }) => {
     load();
   }, [load]);
 
-  const shapes = useMemo(() => shapesOf(spaces, planId), [spaces, planId]);
+  // En el mapa del campus los salones de todos los pisos comparten el plano: se filtran por piso
+  // para que no se encimen al dibujar.
+  const floors = useMemo(() => {
+    const set = new Set(spaces.filter((space) => space.planoId === planId && space.piso).map((space) => space.piso));
+    return [...set].sort((a, b) => (parseFloat(a) || 0) - (parseFloat(b) || 0) || a.localeCompare(b));
+  }, [spaces, planId]);
+  const onFloor = (space) => floor === 'ALL' || String(space.piso || '') === floor;
+  const shapes = useMemo(
+    () =>
+      shapesOf(
+        spaces.filter((space) => floor === 'ALL' || String(space.piso || '') === floor),
+        planId,
+      ),
+    [spaces, planId, floor],
+  );
   const selected = spaces.find((space) => space.id === selectedId) || null;
 
   const visible = useMemo(
     () =>
       spaces.filter((space) => {
-        if (!matchesTerm(space, ['nombre', 'codigo', 'edificio', 'piso'], query)) {
+        if (!onFloor(space) || !matchesTerm(space, ['nombre', 'codigo', 'edificio', 'piso'], query)) {
           return false;
         }
         if (filter === 'PENDING') {
@@ -119,7 +134,8 @@ const PlanEditorScreen = ({ navigation, route }) => {
         }
         return true;
       }),
-    [spaces, filter, query, planId],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [spaces, filter, query, planId, floor],
   );
 
   const replaceSpace = (updated) =>
@@ -209,7 +225,9 @@ const PlanEditorScreen = ({ navigation, route }) => {
   }
 
   const drawnCount = Object.keys(shapes).length;
-  const statusColor = { saving: colors.gray2, saved: colors.success, error: colors.error, idle: colors.gray2 }[status.kind];
+  const statusColor = { saving: colors.gray2, saved: colors.success, error: colors.error, idle: colors.gray2 }[
+    status.kind
+  ];
 
   const panel = (
     <View style={[styles.panel, wide ? styles.panelWide : styles.panelNarrow]}>
@@ -223,7 +241,8 @@ const PlanEditorScreen = ({ navigation, route }) => {
           color={statusColor}
         />
         <Text style={[styles.status, { color: statusColor }]} numberOfLines={2}>
-          {status.message || `${drawnCount} ${drawnCount === 1 ? 'espacio ubicado' : 'espacios ubicados'} en este plano`}
+          {status.message ||
+            `${drawnCount} ${drawnCount === 1 ? 'espacio ubicado' : 'espacios ubicados'} en este plano`}
         </Text>
       </View>
       <TextInput
@@ -234,6 +253,16 @@ const PlanEditorScreen = ({ navigation, route }) => {
         style={styles.search}
       />
       <CategoryChips chips={FILTERS} selected={filter} onSelect={setFilter} />
+      {floors.length > 1 ? (
+        <CategoryChips
+          chips={[
+            { value: 'ALL', label: 'Todos los pisos' },
+            ...floors.map((piso) => ({ value: piso, label: `Piso ${piso}` })),
+          ]}
+          selected={floor}
+          onSelect={setFloor}
+        />
+      ) : null}
       <FlatList
         data={visible}
         keyExtractor={(item) => item.id}
@@ -280,7 +309,12 @@ const PlanEditorScreen = ({ navigation, route }) => {
           label="Exportar GeoJSON"
           variant="outline"
           disabled={drawnCount === 0}
-          onPress={() => downloadGeoJson(plan, spaces.filter((space) => shapes[space.id]))}
+          onPress={() =>
+            downloadGeoJson(
+              plan,
+              spaces.filter((space) => shapes[space.id]),
+            )
+          }
           style={styles.panelButton}
         />
       ) : null}
@@ -303,7 +337,9 @@ const PlanEditorScreen = ({ navigation, route }) => {
           {/* Siempre visible para que el lienzo no salte al elegir un espacio. */}
           <View style={[styles.selectionBar, !selected && styles.selectionBarIdle]}>
             <Text style={styles.selectionText} numberOfLines={1}>
-              {selected ? `Dibujando: ${selected.codigo} · ${selected.nombre}` : 'Elige un espacio de la lista para dibujarlo'}
+              {selected
+                ? `Dibujando: ${selected.codigo} · ${selected.nombre}`
+                : 'Elige un espacio de la lista para dibujarlo'}
             </Text>
           </View>
           <PlanDrawingEditor

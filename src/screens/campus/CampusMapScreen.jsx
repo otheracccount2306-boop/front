@@ -1,37 +1,31 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import CampusMapView from '../../components/campus/map/CampusMapView';
 import SpaceDetailModal from '../../components/campus/SpaceDetailModal';
 import AppIcon from '../../components/common/AppIcon';
 import AppLoader from '../../components/common/AppLoader';
-import CategoryChips from '../../components/common/CategoryChips';
 import EmptyState from '../../components/common/EmptyState';
 import ErrorBanner from '../../components/common/ErrorBanner';
 import ScreenContainer from '../../components/common/ScreenContainer';
 import ScreenHeader from '../../components/common/ScreenHeader';
 import SearchBar from '../../components/common/SearchBar';
 import SegmentedTabs from '../../components/common/SegmentedTabs';
-import { CAMPUS_MODULE_TABS } from '../../navigation/tabItems';
-import { useMappedSpaceSearch, usePlanDetail, usePlans } from '../../hooks/useCampusMap';
+import { pickCampusPlan, useMappedSpaceSearch, usePlanDetail, usePlans } from '../../hooks/useCampusMap';
 import useSpaces from '../../hooks/useSpaces';
+import { CAMPUS_MODULE_TABS } from '../../navigation/tabItems';
 import colors from '../../theme/colors';
 import { cardShadow, fontSizes, radius, spacing } from '../../theme/typography';
-import { ALL_VALUE } from '../../utils/category.utils';
+import { ALL_VALUE, categoryLabel } from '../../utils/category.utils';
+
+const TAP_START = 'tap';
 
 /**
- * @description Etiqueta corta de un plano para los chips: piso si existe, si no el nombre.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} plan - Plano del listado
- * @returns {string} Texto del chip
- */
-const planLabel = (plan) => plan.nombre || [plan.edificio, plan.piso].filter(Boolean).join(' · ');
-
-/**
- * @description Pantalla del mapa interactivo del campus. El estudiante busca un salón por nombre o
- *              código (búsqueda local, funciona sin conexión) y la app envía su UUID al mapa, que
- *              ilumina el polígono y centra la vista. Si el salón está en otro plano, cambia de plano
- *              primero. Acepta route.params.spaceId para abrir el mapa ya enfocado en un espacio,
- *              por ejemplo desde el detalle de un espacio.
+ * @description Pantalla del mapa del campus. Hay un solo mapa con todos los bloques: el estudiante
+ *              busca un salón por nombre o código (búsqueda local, funciona sin conexión), la app
+ *              envía su UUID al mapa, que cambia al piso del salón, lo ilumina y centra la vista.
+ *              Con "Cómo llegar" el mapa dibuja el camino desde una entrada del campus o desde el
+ *              punto que el estudiante toque. Acepta route.params.spaceId para abrir el mapa ya
+ *              enfocado en un espacio (por ejemplo, desde el detalle de un espacio).
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @param {Object} props - Props de navegación de React Navigation
  * @param {Object} props.navigation - Objeto de navegación
@@ -42,53 +36,58 @@ const CampusMapScreen = ({ navigation, route }) => {
   const requestedId = route.params ? route.params.spaceId : undefined;
   const { plans, loading: plansLoading, error: plansError, refresh } = usePlans();
   const { spaces } = useSpaces(ALL_VALUE);
-  const [planId, setPlanId] = useState(null);
+  const campus = useMemo(() => pickCampusPlan(plans), [plans]);
+  const {
+    plan,
+    loading: planLoading,
+    error: planError,
+  } = usePlanDetail(campus ? campus.id : null, campus ? campus.actualizadoEn : null);
   const [selectedId, setSelectedId] = useState(null);
   const [query, setQuery] = useState('');
   const [detail, setDetail] = useState(null);
   const [notice, setNotice] = useState(null);
+  const [mapInfo, setMapInfo] = useState({ entradas: [], navegacion: false });
+  const [start, setStart] = useState(null);
+  const [routeInfo, setRouteInfo] = useState(null);
+  const [routing, setRouting] = useState(false);
   const mapRef = useRef(null);
 
   const spacesById = useMemo(() => new Map(spaces.map((space) => [space.id, space])), [spaces]);
   const results = useMappedSpaceSearch(spaces, query);
-  const currentPlan = plans.find((plan) => plan.id === planId);
-  const { plan, loading: planLoading, error: planError } = usePlanDetail(
-    planId,
-    currentPlan ? currentPlan.actualizadoEn : null,
-  );
+  const selected = selectedId ? spacesById.get(selectedId) : null;
+  const entradas = mapInfo.entradas || [];
+  const startOptions = [...entradas, { id: TAP_START, nombre: 'Tocar el mapa' }];
 
   /**
-   * @description Envía un espacio al mapa: cambia al plano donde está dibujado y lo ilumina.
+   * @description Enfoca un espacio en el mapa y limpia el camino anterior.
    * @author Diego Luna <diego.luna@campusucc.edu.co>
-   * @param {Object} space - Espacio con planoId y geometria
+   * @param {Object} space - Espacio con geometría
    * @returns {void}
    */
   const focusSpace = (space) => {
     setNotice(null);
-    if (!space.planoId || !space.geometria) {
-      setNotice(`${space.nombre} todavía no está ubicado en un plano.`);
+    setRouteInfo(null);
+    setRouting(false);
+    if (mapRef.current) {
+      mapRef.current.clearRoute();
+    }
+    if (!space.geometria) {
+      setNotice(`${space.nombre} todavía no está ubicado en el mapa.`);
       return;
     }
-    setPlanId(space.planoId);
     setSelectedId(space.id);
     if (space.id === selectedId && mapRef.current) {
-      // Mismo salón: se vuelve a enviar para repetir el centrado y el pulso.
       mapRef.current.highlight(space.id);
     }
   };
 
-  // Plano inicial: el del espacio pedido por parámetro, o el primero de la lista.
   useEffect(() => {
     if (requestedId && spacesById.has(requestedId)) {
       focusSpace(spacesById.get(requestedId));
       navigation.setParams({ spaceId: undefined });
-      return;
-    }
-    if (!planId && plans.length > 0) {
-      setPlanId(plans[0].id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requestedId, spacesById, plans]);
+  }, [requestedId, spacesById]);
 
   const choose = (space) => {
     Keyboard.dismiss();
@@ -96,7 +95,22 @@ const CampusMapScreen = ({ navigation, route }) => {
     focusSpace(space);
   };
 
-  const chips = plans.map((item) => ({ value: item.id, label: planLabel(item) }));
+  /**
+   * @description Pide al mapa el camino hasta el espacio elegido desde el punto de partida indicado.
+   * @author Diego Luna <diego.luna@campusucc.edu.co>
+   * @param {string} startId - Id de una entrada del campus o 'tap'
+   * @returns {void}
+   */
+  const requestRoute = (startId) => {
+    if (!selected || !mapRef.current) {
+      return;
+    }
+    setStart(startId);
+    setNotice(null);
+    setRouteInfo(null);
+    setRouting(true);
+    mapRef.current.route(selected.id, startId);
+  };
 
   let map;
   if (planLoading && !plan) {
@@ -106,12 +120,26 @@ const CampusMapScreen = ({ navigation, route }) => {
       <CampusMapView
         ref={mapRef}
         plan={plan}
-        selectedId={plan.id === planId ? selectedId : null}
+        selectedId={selectedId}
+        onReady={(info) => setMapInfo({ entradas: info.entradas || [], navegacion: Boolean(info.navegacion) })}
         onSpacePress={(id) => {
           setSelectedId(id);
-          setDetail(spacesById.get(id) || null);
+          setRouteInfo(null);
+          setRouting(false);
+          if (mapRef.current) {
+            mapRef.current.clearRoute();
+          }
         }}
-        onNotFound={() => setNotice('Este espacio no aparece en el plano seleccionado.')}
+        onNotFound={() => setNotice('Este espacio no aparece en el mapa.')}
+        onRoute={(info) => {
+          setNotice(null);
+          setRouting(false);
+          setRouteInfo(info);
+        }}
+        onRouteError={(message) => {
+          setRouting(false);
+          setNotice(message);
+        }}
       />
     );
   } else if (planError) {
@@ -121,73 +149,140 @@ const CampusMapScreen = ({ navigation, route }) => {
       </View>
     );
   } else {
-    map = <EmptyState icon="map-outline" message="Elige un plano para ver el mapa" />;
+    map = <EmptyState icon="map-outline" message="El mapa del campus no está disponible" />;
   }
+
+  const header = <ScreenHeader title="Campus" subtitle="Mapa del campus" />;
+  const tabs = (
+    <SegmentedTabs items={CAMPUS_MODULE_TABS} current="CampusMap" onChange={(name) => navigation.navigate(name)} />
+  );
 
   if (plansLoading) {
     return (
-      <ScreenContainer header={<ScreenHeader title="Campus" subtitle="Mapa del campus" />}>
-        <SegmentedTabs items={CAMPUS_MODULE_TABS} current="CampusMap" onChange={(name) => navigation.navigate(name)} />
+      <ScreenContainer header={header}>
+        {tabs}
         <AppLoader fill />
       </ScreenContainer>
     );
   }
 
-  return (
-    <ScreenContainer header={<ScreenHeader title="Campus" subtitle="Mapa del campus" />}>
-      <SegmentedTabs items={CAMPUS_MODULE_TABS} current="CampusMap" onChange={(name) => navigation.navigate(name)} />
-      {plans.length === 0 ? (
+  if (!campus) {
+    return (
+      <ScreenContainer header={header}>
+        {tabs}
         <View style={styles.fill}>
           {plansError ? (
             <View style={styles.padded}>
               <ErrorBanner message={plansError} onRetry={refresh} />
             </View>
           ) : (
-            <EmptyState icon="map-outline" message="Aún no hay planos del campus" />
+            <EmptyState icon="map-outline" message="Aún no hay mapa del campus" />
           )}
         </View>
-      ) : (
-        <>
-          <SearchBar value={query} onChangeText={setQuery} placeholder="¿Qué salón buscas? Nombre o código" />
-          {chips.length > 1 ? <CategoryChips chips={chips} selected={planId} onSelect={setPlanId} /> : null}
-          {notice ? (
-            <View style={styles.padded}>
-              <ErrorBanner message={notice} variant="info" />
+      </ScreenContainer>
+    );
+  }
+
+  return (
+    <ScreenContainer header={header}>
+      {tabs}
+      <SearchBar value={query} onChangeText={setQuery} placeholder="¿Qué salón buscas? Nombre o código" />
+      {notice ? (
+        <View style={styles.padded}>
+          <ErrorBanner message={notice} variant="info" />
+        </View>
+      ) : null}
+      <View style={styles.mapArea}>
+        {map}
+        {results.length > 0 ? (
+          <View style={styles.results}>
+            {results.map((space) => (
+              <Pressable
+                key={space.id}
+                onPress={() => choose(space)}
+                style={({ pressed }) => [styles.result, pressed && styles.resultPressed]}
+                accessibilityRole="button"
+                accessibilityLabel={`Ver ${space.nombre} en el mapa`}
+              >
+                <AppIcon name="location-outline" size={16} color={colors.primary} />
+                <View style={styles.resultText}>
+                  <Text style={styles.resultName} numberOfLines={1}>
+                    {space.nombre}
+                  </Text>
+                  <Text style={styles.resultMeta} numberOfLines={1}>
+                    {[space.codigo, space.edificio, space.piso ? `Piso ${space.piso}` : null]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </Text>
+                </View>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+        {query.trim().length >= 2 && results.length === 0 ? (
+          <View style={styles.results}>
+            <Text style={styles.noResults}>No hay salones ubicados con esa búsqueda</Text>
+          </View>
+        ) : null}
+      </View>
+      {selected && results.length === 0 ? (
+        <View style={styles.sheet}>
+          <View style={styles.sheetHeader}>
+            <View style={styles.sheetTitle}>
+              <Text style={styles.sheetName} numberOfLines={1}>
+                {selected.nombre}
+              </Text>
+              <Text style={styles.sheetMeta} numberOfLines={1}>
+                {[
+                  selected.codigo,
+                  categoryLabel(selected.categoria),
+                  selected.edificio,
+                  selected.piso ? `Piso ${selected.piso}` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </Text>
             </View>
-          ) : null}
-          <View style={styles.mapArea}>
-            {map}
-            {results.length > 0 ? (
-              <View style={styles.results}>
-                {results.map((space) => (
+            <Pressable onPress={() => setDetail(selected)} accessibilityRole="button" accessibilityLabel="Ver detalle">
+              <AppIcon name="information-circle-outline" size={24} color={colors.primary} />
+            </Pressable>
+          </View>
+          {mapInfo.navegacion ? (
+            <>
+              <Text style={styles.sheetLabel}>Cómo llegar desde</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+                {startOptions.map((option) => (
                   <Pressable
-                    key={space.id}
-                    onPress={() => choose(space)}
-                    style={({ pressed }) => [styles.result, pressed && styles.resultPressed]}
+                    key={option.id}
+                    onPress={() => requestRoute(option.id)}
+                    style={[styles.chip, start === option.id && styles.chipActive]}
                     accessibilityRole="button"
-                    accessibilityLabel={`Ver ${space.nombre} en el mapa`}
                   >
-                    <AppIcon name="location-outline" size={16} color={colors.primary} />
-                    <View style={styles.resultText}>
-                      <Text style={styles.resultName} numberOfLines={1}>
-                        {space.nombre}
-                      </Text>
-                      <Text style={styles.resultMeta} numberOfLines={1}>
-                        {[space.codigo, space.edificio, space.piso].filter(Boolean).join(' · ')}
-                      </Text>
-                    </View>
+                    <AppIcon
+                      name={option.id === TAP_START ? 'hand-left-outline' : 'walk-outline'}
+                      size={14}
+                      color={start === option.id ? colors.white : colors.primary}
+                    />
+                    <Text style={[styles.chipText, start === option.id && styles.chipTextActive]} numberOfLines={1}>
+                      {option.nombre}
+                    </Text>
                   </Pressable>
                 ))}
-              </View>
-            ) : null}
-            {query.trim().length >= 2 && results.length === 0 ? (
-              <View style={styles.results}>
-                <Text style={styles.noResults}>No hay salones ubicados con esa búsqueda</Text>
-              </View>
-            ) : null}
-          </View>
-        </>
-      )}
+              </ScrollView>
+              {routing && start !== TAP_START ? <Text style={styles.routeText}>Calculando el camino…</Text> : null}
+              {routeInfo ? (
+                <View style={styles.routeRow}>
+                  <AppIcon name="footsteps-outline" size={18} color={colors.primary} />
+                  <Text style={styles.routeText}>
+                    {`${routeInfo.minutos} min caminando · ${routeInfo.distancia} m`}
+                    {routeInfo.piso && routeInfo.piso !== '1' ? ` · Sube al piso ${routeInfo.piso}` : ''}
+                  </Text>
+                </View>
+              ) : null}
+            </>
+          ) : null}
+        </View>
+      ) : null}
       <SpaceDetailModal space={detail} onClose={() => setDetail(null)} />
     </ScreenContainer>
   );
@@ -243,6 +338,78 @@ const styles = StyleSheet.create({
     fontSize: fontSizes.small,
     color: colors.gray2,
     padding: spacing.md,
+  },
+  sheet: {
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray4,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sheetTitle: {
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  sheetName: {
+    fontSize: fontSizes.section,
+    fontWeight: '700',
+    color: colors.gray1,
+  },
+  sheetMeta: {
+    fontSize: fontSizes.small,
+    color: colors.gray2,
+    marginTop: 2,
+  },
+  sheetLabel: {
+    fontSize: fontSizes.label,
+    fontWeight: '700',
+    color: colors.gray3,
+    textTransform: 'uppercase',
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  chips: {
+    paddingVertical: spacing.xs,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: radius.chip,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    marginRight: spacing.sm,
+    maxWidth: 260,
+  },
+  chipActive: {
+    backgroundColor: colors.primary,
+  },
+  chipText: {
+    fontSize: fontSizes.small,
+    fontWeight: '600',
+    color: colors.primary,
+    marginLeft: 6,
+  },
+  chipTextActive: {
+    color: colors.white,
+  },
+  routeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  routeText: {
+    fontSize: fontSizes.body,
+    fontWeight: '600',
+    color: colors.gray1,
+    marginLeft: spacing.xs,
+    marginTop: spacing.xs,
   },
 });
 

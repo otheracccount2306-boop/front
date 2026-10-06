@@ -58,6 +58,7 @@ const EDITOR_CSS = `
   pointer-events: none;
 }
 .plan-editor .leaflet-container { background: ${colors.background}; cursor: default; }
+.plan-editor.hide-codes .space-code { display: none; }
 `;
 
 let cssInjected = false;
@@ -155,6 +156,16 @@ const PlanDrawingEditor = ({ plan, shapes, selectedId, onSelect, onDraw, onEdit,
     });
     L.imageOverlay(plan.imagen, bounds).addTo(map);
     map.fitBounds(bounds);
+    // En planos grandes (el campus completo) los códigos se encimarían: solo se ven al acercarse.
+    const codesZoom = map.getZoom() + (Math.max(plan.ancho, plan.alto) > 3000 ? 1.5 : 0);
+    const toggleCodes = () => {
+      const wrapper = containerRef.current && containerRef.current.parentElement;
+      if (wrapper) {
+        wrapper.classList.toggle('hide-codes', map.getZoom() < codesZoom);
+      }
+    };
+    map.on('zoomend', toggleCodes);
+    toggleCodes();
 
     const group = L.featureGroup().addTo(map);
     const draw = new L.Control.Draw({

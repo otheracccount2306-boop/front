@@ -2,27 +2,36 @@
 <!--
   Mapa del campus · UCC Santa Marta
 
-  Plantilla del mapa interactivo que la app muestra dentro de un WebView (móvil) o un iframe (web).
-  Funciona sin conexión: Leaflet se incrusta aquí al instalar dependencias (scripts/build-campus-map.js)
-  y la imagen del plano llega como data URL dentro de la configuración. No usa teselas, satélite ni GPS.
+  Un solo mapa para todo el campus: el plano general con la planta baja de cada bloque en su
+  posición real, y encima los salones de todos los pisos. Se muestra dentro de un WebView (móvil)
+  o un iframe (web) y funciona sin conexión: Leaflet va incrustado (scripts/build-campus-map.js) y
+  la imagen del campus llega como data URL dentro de la configuración. Sin teselas, satélite ni GPS.
 
   Marcadores que se reemplazan:
     LEAFLET_CSS / LEAFLET_JS  → en build, con node_modules/leaflet/dist (campusMapTemplate.generated.js)
-    MAP_CONFIG                → en ejecución, con buildMapHtml(plan) (plano, polígonos y colores de la app)
+    MAP_CONFIG                → en ejecución, con buildMapHtml(plan)
 
-  Coordenadas: L.CRS.Simple con límites [[0, 0], [alto, ancho]]. Una unidad = un píxel del plano.
-  Los polígonos son GeoJSON Polygon con posiciones [x, y] (x desde la izquierda, y desde abajo).
+  Coordenadas: L.CRS.Simple con límites [[0, 0], [alto, ancho]]. Una unidad = un píxel de la imagen.
+  Los salones son GeoJSON Polygon con posiciones [x, y] (x desde la izquierda, y desde abajo).
 
   API global (la app la llama con injectJavaScript o postMessage):
-    window.highlightSpace(uuid)  ilumina el polígono del espacio y centra la vista; devuelve true/false
-    window.clearHighlight()      quita la selección
-    window.fitPlan()             vuelve a mostrar el plano completo
+    window.highlightSpace(uuid)      ilumina el salón, cambia al piso donde está y centra la vista
+    window.clearHighlight()          quita la selección
+    window.showFloor(piso)           muestra los salones de un piso
+    window.routeTo(uuid, inicio)     dibuja el camino hasta el salón; inicio = id de una entrada,
+                                     'tap' (el estudiante toca el mapa) o {x, y} en píxeles
+    window.clearRoute()              borra el camino
+    window.fitPlan()                 muestra el campus completo
 
   Mensajes hacia la app ({ source: 'ucc-campus-map', type, payload }):
-    ready        { planId, spaces }   el mapa terminó de cargar
-    highlighted  { id }               se iluminó el espacio pedido
-    notFound     { id }               el UUID no está dibujado en este plano
-    spacePress   { id }               el estudiante tocó un salón
+    ready        { planId, spaces, floors, entradas, navegacion }
+    highlighted  { id, piso }
+    notFound     { id }
+    spacePress   { id }
+    floor        { piso }
+    pickStart    {}                        esperando a que el estudiante toque su ubicación
+    route        { id, distancia, minutos, piso, edificio, nombre }
+    routeError   { id, message }
     error        { message }
 -->
 <html lang="es">
@@ -72,7 +81,6 @@
       .leaflet-tooltip.space-label.is-selected::before {
         border-top-color: var(--primary, #007760);
       }
-      /* Pulso al iluminar: el trazo "late" tres veces para que el salón se encuentre de un vistazo. */
       .space-pulse {
         animation: space-pulse 0.7s ease-in-out 3;
       }
@@ -86,6 +94,104 @@
           stroke-width: 10px;
           stroke-opacity: 0.45;
         }
+      }
+      /* Nombre de cada bloque sobre el mapa */
+      .building-label {
+        background: transparent;
+        border: 0;
+      }
+      .hide-buildings .building-label {
+        display: none;
+      }
+      .building-label span {
+        display: inline-block;
+        transform: translate(-50%, -50%);
+        white-space: nowrap;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid var(--primary, #007760);
+        border-radius: 10px;
+        color: var(--primary, #007760);
+        font-size: 11px;
+        font-weight: 800;
+        padding: 1px 7px;
+      }
+      /* Selector de piso */
+      .floor-control {
+        background: var(--white, #fff);
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+        overflow: hidden;
+      }
+      .floor-control .floor-title {
+        font-size: 9px;
+        font-weight: 800;
+        color: var(--gray2, #6b6b6b);
+        text-align: center;
+        padding: 4px 0 2px;
+        text-transform: uppercase;
+      }
+      .floor-control button {
+        display: block;
+        width: 40px;
+        height: 34px;
+        border: 0;
+        border-top: 1px solid var(--gray4, #e8e8e8);
+        background: var(--white, #fff);
+        color: var(--gray1, #3d3d3d);
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .floor-control button.active {
+        background: var(--primary, #007760);
+        color: var(--white, #fff);
+      }
+      /* Camino */
+      .route-line {
+        stroke-dasharray: 2 14;
+        animation: route-dash 1.2s linear infinite;
+      }
+      @keyframes route-dash {
+        to {
+          stroke-dashoffset: -16;
+        }
+      }
+      .route-pin {
+        background: transparent;
+        border: 0;
+      }
+      .route-pin div {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 3px solid var(--white, #fff);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+        transform: translate(-50%, -50%);
+      }
+      .route-pin.start div {
+        background: #2f6fde;
+      }
+      .route-pin.end div {
+        background: var(--accent, #f5a623);
+      }
+      .map-banner {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 14px;
+        z-index: 1000;
+        background: var(--gray1, #3d3d3d);
+        color: var(--white, #fff);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+        display: none;
+      }
+      .map-banner.visible {
+        display: block;
       }
       .map-message {
         position: absolute;
@@ -102,6 +208,7 @@
   </head>
   <body>
     <div id="map"></div>
+    <div id="banner" class="map-banner"></div>
     <script>
       /*__LEAFLET_JS__*/
     </script>
@@ -113,13 +220,21 @@
 
         var SOURCE_MAP = 'ucc-campus-map';
         var SOURCE_APP = 'ucc-campus-app';
+        var WALK_SPEED = 1.2; // m/s
 
         var map = null;
-        var layersById = {};
-        var selectedId = null;
-        var pendingId = null;
         var ready = false;
         var theme = {};
+        var spaces = {}; // id -> { space, layer, piso }
+        var floors = [];
+        var currentFloor = null;
+        var floorButtons = {};
+        var selectedId = null;
+        var pending = [];
+        var nav = null;
+        var routeLayer = null;
+        var picking = null; // id del destino mientras se espera el toque de inicio
+        var banner = document.getElementById('banner');
 
         // ---- Comunicación con la app ------------------------------------------------------
 
@@ -150,6 +265,12 @@
             window.clearHighlight();
           } else if (data.type === 'fit') {
             window.fitPlan();
+          } else if (data.type === 'floor') {
+            window.showFloor(data.piso);
+          } else if (data.type === 'route') {
+            window.routeTo(data.id, data.start);
+          } else if (data.type === 'clearRoute') {
+            window.clearRoute();
           }
         }
 
@@ -161,121 +282,602 @@
           send('error', { message: String(message) });
         };
 
-        // ---- Estilos de los polígonos -----------------------------------------------------
+        function showBanner(text) {
+          banner.textContent = text || '';
+          banner.className = text ? 'map-banner visible' : 'map-banner';
+        }
 
-        function idleStyle() {
+        // ---- Estilos ----------------------------------------------------------------------
+
+        function categoryColor(categoria) {
+          return (
+            {
+              AULA: theme.primary,
+              LABORATORIO: theme.aqua || theme.primary,
+              OFICINA: theme.gray2,
+              CAFETERIA: theme.accent,
+              BIBLIOTECA: theme.primaryDark || theme.primary,
+            }[categoria] || theme.light
+          );
+        }
+
+        function idleStyle(space) {
           return {
             color: theme.primary,
-            weight: 1.5,
-            opacity: 0.9,
-            fillColor: theme.light,
-            fillOpacity: 0.18,
+            weight: 1,
+            opacity: 0.8,
+            fillColor: categoryColor(space.categoria),
+            fillOpacity: space.categoria === 'AREA_COMUN' ? 0.08 : 0.22,
           };
         }
 
         function selectedStyle() {
-          return {
-            color: theme.primary,
-            weight: 3,
-            opacity: 1,
-            fillColor: theme.accent,
-            fillOpacity: 0.55,
-          };
+          return { color: theme.primary, weight: 3, opacity: 1, fillColor: theme.accent, fillOpacity: 0.6 };
         }
 
         // Los nombres vienen del panel administrativo: se insertan como texto, nunca como HTML.
-        function label(text) {
+        function textNode(text) {
           var span = document.createElement('span');
           span.textContent = text || '';
           return span;
         }
 
-        function setIdleTooltip(layer) {
-          layer.unbindTooltip();
-          layer.bindTooltip(label(layer.space.codigo || layer.space.nombre), {
+        function floorLabel(piso) {
+          return 'Piso ' + piso;
+        }
+
+        function setIdle(entry) {
+          entry.layer.setStyle(idleStyle(entry.space));
+          entry.layer.unbindTooltip();
+          entry.layer.bindTooltip(textNode(entry.space.codigo || entry.space.nombre), {
             direction: 'center',
             className: 'space-label',
           });
         }
 
-        function setSelectedTooltip(layer) {
-          layer.unbindTooltip();
-          layer
-            .bindTooltip(label(layer.space.nombre || layer.space.codigo), {
+        function setSelected(entry) {
+          entry.layer.setStyle(selectedStyle());
+          entry.layer.bringToFront();
+          entry.layer.unbindTooltip();
+          var label = entry.space.nombre + (floors.length > 1 ? ' · ' + floorLabel(entry.piso) : '');
+          entry.layer
+            .bindTooltip(textNode(label), {
               permanent: true,
               direction: 'top',
               offset: [0, -6],
               className: 'space-label is-selected',
             })
             .openTooltip();
+          var element = entry.layer.getElement && entry.layer.getElement();
+          if (element) {
+            element.classList.remove('space-pulse');
+            void element.getBoundingClientRect();
+            element.classList.add('space-pulse');
+          }
         }
 
-        function restartPulse(layer) {
-          var element = layer.getElement && layer.getElement();
-          if (!element) {
+        // ---- Pisos ------------------------------------------------------------------------
+
+        window.showFloor = function (piso) {
+          piso = String(piso);
+          if (!ready || floors.indexOf(piso) < 0) {
+            return false;
+          }
+          currentFloor = piso;
+          Object.keys(spaces).forEach(function (id) {
+            var entry = spaces[id];
+            var visible = entry.piso === piso;
+            if (visible && !map.hasLayer(entry.layer)) {
+              entry.layer.addTo(map);
+            } else if (!visible && map.hasLayer(entry.layer)) {
+              map.removeLayer(entry.layer);
+            }
+          });
+          if (selectedId && spaces[selectedId] && spaces[selectedId].piso === piso) {
+            setSelected(spaces[selectedId]);
+          }
+          Object.keys(floorButtons).forEach(function (key) {
+            floorButtons[key].className = key === piso ? 'active' : '';
+          });
+          if (routeLayer) {
+            routeLayer.bringToFront();
+          }
+          send('floor', { piso: piso });
+          return true;
+        };
+
+        function addFloorControl() {
+          if (floors.length < 2) {
             return;
           }
-          element.classList.remove('space-pulse');
-          // Fuerza un reflow para que la animación vuelva a empezar si se ilumina el mismo salón.
-          void element.getBoundingClientRect();
-          element.classList.add('space-pulse');
+          var FloorControl = L.Control.extend({
+            options: { position: 'topright' },
+            onAdd: function () {
+              var box = L.DomUtil.create('div', 'floor-control');
+              var title = L.DomUtil.create('div', 'floor-title', box);
+              title.textContent = 'Piso';
+              floors
+                .slice()
+                .reverse()
+                .forEach(function (piso) {
+                  var button = L.DomUtil.create('button', '', box);
+                  button.type = 'button';
+                  button.textContent = piso;
+                  button.setAttribute('aria-label', floorLabel(piso));
+                  L.DomEvent.on(button, 'click', function (event) {
+                    L.DomEvent.stop(event);
+                    window.showFloor(piso);
+                  });
+                  floorButtons[piso] = button;
+                });
+              L.DomEvent.disableClickPropagation(box);
+              return box;
+            },
+          });
+          map.addControl(new FloorControl());
         }
 
-        // ---- API global ---------------------------------------------------------------------
+        // ---- Iluminación --------------------------------------------------------------------
 
-        /**
-         * Ilumina el salón con el UUID recibido y centra la vista sobre él.
-         * Si el mapa aún no termina de cargar, guarda el pedido y lo atiende al estar listo.
-         */
         window.highlightSpace = function (id, options) {
           var spaceId = String(id || '').trim().toLowerCase();
           if (!ready) {
-            pendingId = spaceId;
+            pending.push(function () {
+              window.highlightSpace(spaceId, options);
+            });
             return false;
           }
-          if (selectedId && layersById[selectedId]) {
-            var previous = layersById[selectedId];
-            previous.setStyle(idleStyle());
-            setIdleTooltip(previous);
+          if (selectedId && spaces[selectedId]) {
+            setIdle(spaces[selectedId]);
           }
           selectedId = null;
-
-          var layer = layersById[spaceId];
-          if (!layer) {
+          var entry = spaces[spaceId];
+          if (!entry) {
             send('notFound', { id: spaceId });
             return false;
           }
-
           selectedId = spaceId;
-          layer.setStyle(selectedStyle());
-          layer.bringToFront();
-          setSelectedTooltip(layer);
-          restartPulse(layer);
-
+          if (entry.piso !== currentFloor) {
+            window.showFloor(entry.piso);
+          }
+          setSelected(entry);
           if (!options || options.center !== false) {
-            map.flyToBounds(layer.getBounds(), {
-              padding: [48, 48],
-              maxZoom: Math.min(map.getMaxZoom(), 1),
+            map.flyToBounds(entry.layer.getBounds(), {
+              padding: [60, 60],
+              maxZoom: Math.min(map.getMaxZoom(), 0.5),
               duration: 0.6,
             });
           }
-          send('highlighted', { id: spaceId });
+          send('highlighted', { id: spaceId, piso: entry.piso });
           return true;
         };
 
         window.clearHighlight = function () {
-          if (selectedId && layersById[selectedId]) {
-            layersById[selectedId].setStyle(idleStyle());
-            setIdleTooltip(layersById[selectedId]);
+          if (selectedId && spaces[selectedId]) {
+            setIdle(spaces[selectedId]);
           }
           selectedId = null;
-          pendingId = null;
         };
 
+        var buildingsBounds = null;
+
+        // Vista inicial: la zona de los edificios, no todo el lote (las canchas dejan todo muy pequeño).
         window.fitPlan = function () {
           if (map) {
-            map.fitBounds(map.options.planBounds);
+            map.fitBounds(buildingsBounds || map.options.planBounds, { padding: [10, 10] });
           }
+        };
+
+        // ---- Caminos (A* sobre la malla caminable) ---------------------------------------
+
+        function decodeGrid(navegacion) {
+          var w = navegacion.ancho;
+          var h = navegacion.alto;
+          var cells = new Uint8Array(w * h);
+          var runs = String(navegacion.malla).split(',');
+          var value = 0;
+          var index = 0;
+          for (var i = 0; i < runs.length; i += 1) {
+            var count = parseInt(runs[i], 10) || 0;
+            if (value) {
+              cells.fill(1, index, index + count);
+            }
+            index += count;
+            value = 1 - value;
+          }
+          return { w: w, h: h, cells: cells, size: navegacion.celdaPx, ppm: navegacion.pxPorMetro || 1 };
+        }
+
+        function cellOf(x, y) {
+          return { i: Math.floor(x / nav.size), j: Math.floor(y / nav.size) };
+        }
+
+        function centerOf(index) {
+          var i = index % nav.w;
+          var j = Math.floor(index / nav.w);
+          return [(i + 0.5) * nav.size, (j + 0.5) * nav.size];
+        }
+
+        function pointInRing(x, y, ring) {
+          var inside = false;
+          for (var a = 0, b = ring.length - 1; a < ring.length; b = a, a += 1) {
+            var xa = ring[a][0];
+            var ya = ring[a][1];
+            var xb = ring[b][0];
+            var yb = ring[b][1];
+            if (ya > y !== yb > y && x < ((xb - xa) * (y - ya)) / (yb - ya) + xa) {
+              inside = !inside;
+            }
+          }
+          return inside;
+        }
+
+        // Celdas del salón más un anillo alrededor: el camino entra al salón desde el pasillo o
+        // el exterior más cercano (los planos no marcan las puertas).
+        function targetCells(space, ring) {
+          var coords = space.geometria.coordinates[0];
+          var minx = Infinity;
+          var miny = Infinity;
+          var maxx = -Infinity;
+          var maxy = -Infinity;
+          coords.forEach(function (p) {
+            minx = Math.min(minx, p[0]);
+            miny = Math.min(miny, p[1]);
+            maxx = Math.max(maxx, p[0]);
+            maxy = Math.max(maxy, p[1]);
+          });
+          var a = cellOf(minx, miny);
+          var b = cellOf(maxx, maxy);
+          var target = new Uint8Array(nav.w * nav.h);
+          var frontier = [];
+          for (var j = Math.max(0, a.j); j <= Math.min(nav.h - 1, b.j); j += 1) {
+            for (var i = Math.max(0, a.i); i <= Math.min(nav.w - 1, b.i); i += 1) {
+              var c = centerOf(j * nav.w + i);
+              if (pointInRing(c[0], c[1], coords)) {
+                target[j * nav.w + i] = 1;
+                frontier.push(j * nav.w + i);
+              }
+            }
+          }
+          if (!frontier.length) {
+            var center = cellOf((minx + maxx) / 2, (miny + maxy) / 2);
+            var k = center.j * nav.w + center.i;
+            target[k] = 1;
+            frontier.push(k);
+          }
+          for (var step = 0; step < ring; step += 1) {
+            var next = [];
+            frontier.forEach(function (k) {
+              var i = k % nav.w;
+              var j = Math.floor(k / nav.w);
+              [
+                [1, 0],
+                [-1, 0],
+                [0, 1],
+                [0, -1],
+              ].forEach(function (d) {
+                var ni = i + d[0];
+                var nj = j + d[1];
+                if (ni >= 0 && nj >= 0 && ni < nav.w && nj < nav.h) {
+                  var nk = nj * nav.w + ni;
+                  if (!target[nk]) {
+                    target[nk] = 1;
+                    next.push(nk);
+                  }
+                }
+              });
+            });
+            frontier = next;
+          }
+          return { cells: target, box: [a.i - ring, a.j - ring, b.i + ring, b.j + ring] };
+        }
+
+        function nearestWalkable(start) {
+          var startK = start.j * nav.w + start.i;
+          if (start.i >= 0 && start.j >= 0 && start.i < nav.w && start.j < nav.h && nav.cells[startK]) {
+            return startK;
+          }
+          var best = -1;
+          var bestD = Infinity;
+          var radius = 80; // 40 m
+          for (var j = Math.max(0, start.j - radius); j <= Math.min(nav.h - 1, start.j + radius); j += 1) {
+            for (var i = Math.max(0, start.i - radius); i <= Math.min(nav.w - 1, start.i + radius); i += 1) {
+              if (nav.cells[j * nav.w + i]) {
+                var d = (i - start.i) * (i - start.i) + (j - start.j) * (j - start.j);
+                if (d < bestD) {
+                  bestD = d;
+                  best = j * nav.w + i;
+                }
+              }
+            }
+          }
+          return best;
+        }
+
+        // Montículo binario mínimo para la lista abierta del A*.
+        function Heap() {
+          this.keys = [];
+          this.prio = [];
+        }
+        Heap.prototype.push = function (key, p) {
+          var keys = this.keys;
+          var prio = this.prio;
+          var i = keys.length;
+          keys.push(key);
+          prio.push(p);
+          while (i > 0) {
+            var parent = (i - 1) >> 1;
+            if (prio[parent] <= p) {
+              break;
+            }
+            keys[i] = keys[parent];
+            prio[i] = prio[parent];
+            i = parent;
+          }
+          keys[i] = key;
+          prio[i] = p;
+        };
+        Heap.prototype.pop = function () {
+          var keys = this.keys;
+          var prio = this.prio;
+          var top = keys[0];
+          var lastK = keys.pop();
+          var lastP = prio.pop();
+          if (keys.length) {
+            var i = 0;
+            var n = keys.length;
+            while (true) {
+              var l = 2 * i + 1;
+              if (l >= n) {
+                break;
+              }
+              var r = l + 1;
+              var m = r < n && prio[r] < prio[l] ? r : l;
+              if (prio[m] >= lastP) {
+                break;
+              }
+              keys[i] = keys[m];
+              prio[i] = prio[m];
+              i = m;
+            }
+            keys[i] = lastK;
+            prio[i] = lastP;
+          }
+          return top;
+        };
+
+        function astar(startK, target) {
+          var w = nav.w;
+          var h = nav.h;
+          var n = w * h;
+          var g = new Float32Array(n).fill(Infinity);
+          var came = new Int32Array(n).fill(-1);
+          var closed = new Uint8Array(n);
+          var bx0 = target.box[0];
+          var by0 = target.box[1];
+          var bx1 = target.box[2];
+          var by1 = target.box[3];
+          function heuristic(k) {
+            var i = k % w;
+            var j = (k - i) / w;
+            var dx = i < bx0 ? bx0 - i : i > bx1 ? i - bx1 : 0;
+            var dy = j < by0 ? by0 - j : j > by1 ? j - by1 : 0;
+            return Math.max(dx, dy) + 0.4142 * Math.min(dx, dy);
+          }
+          var open = new Heap();
+          g[startK] = 0;
+          open.push(startK, heuristic(startK));
+          var dirs = [
+            [1, 0, 1],
+            [-1, 0, 1],
+            [0, 1, 1],
+            [0, -1, 1],
+            [1, 1, 1.4142],
+            [1, -1, 1.4142],
+            [-1, 1, 1.4142],
+            [-1, -1, 1.4142],
+          ];
+          while (open.keys.length) {
+            var k = open.pop();
+            if (closed[k]) {
+              continue;
+            }
+            closed[k] = 1;
+            if (target.cells[k]) {
+              var path = [];
+              for (var c = k; c !== -1; c = came[c]) {
+                path.push(c);
+              }
+              return path.reverse();
+            }
+            var i = k % w;
+            var j = (k - i) / w;
+            for (var d = 0; d < 8; d += 1) {
+              var ni = i + dirs[d][0];
+              var nj = j + dirs[d][1];
+              if (ni < 0 || nj < 0 || ni >= w || nj >= h) {
+                continue;
+              }
+              var nk = nj * w + ni;
+              if (closed[nk] || !(nav.cells[nk] || target.cells[nk])) {
+                continue;
+              }
+              // En diagonal no se cortan esquinas de muros.
+              if (d >= 4 && !((nav.cells[j * w + ni] || target.cells[j * w + ni]) && (nav.cells[nj * w + i] || target.cells[nj * w + i]))) {
+                continue;
+              }
+              var cost = g[k] + dirs[d][2];
+              if (cost < g[nk]) {
+                g[nk] = cost;
+                came[nk] = k;
+                open.push(nk, cost + heuristic(nk));
+              }
+            }
+          }
+          return null;
+        }
+
+        function walkable(k, target) {
+          return nav.cells[k] || target.cells[k];
+        }
+
+        function lineOfSight(a, b, target) {
+          var x0 = a % nav.w;
+          var y0 = Math.floor(a / nav.w);
+          var x1 = b % nav.w;
+          var y1 = Math.floor(b / nav.w);
+          var steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) * 2;
+          for (var s = 1; s < steps; s += 1) {
+            var x = Math.round(x0 + ((x1 - x0) * s) / steps);
+            var y = Math.round(y0 + ((y1 - y0) * s) / steps);
+            if (!walkable(y * nav.w + x, target)) {
+              return false;
+            }
+          }
+          return true;
+        }
+
+        // Quita los zigzags de la malla: une puntos que se ven entre sí.
+        function smooth(path, target) {
+          if (path.length < 3) {
+            return path;
+          }
+          var out = [path[0]];
+          var anchor = 0;
+          for (var i = 2; i < path.length; i += 1) {
+            if (!lineOfSight(path[anchor], path[i], target)) {
+              out.push(path[i - 1]);
+              anchor = i - 1;
+            }
+          }
+          out.push(path[path.length - 1]);
+          return out;
+        }
+
+        function pin(latlng, kind) {
+          return L.marker(latlng, {
+            interactive: false,
+            keyboard: false,
+            icon: L.divIcon({ className: 'route-pin ' + kind, html: '<div></div>', iconSize: [0, 0] }),
+          });
+        }
+
+        window.clearRoute = function () {
+          if (routeLayer) {
+            map.removeLayer(routeLayer);
+            routeLayer = null;
+          }
+          picking = null;
+          showBanner('');
+        };
+
+        function resolveStart(start) {
+          if (start && typeof start === 'object' && isFinite(start.x) && isFinite(start.y)) {
+            return { x: Number(start.x), y: Number(start.y), nombre: 'Tu ubicación' };
+          }
+          var entradas = (nav && nav.entradas) || [];
+          for (var i = 0; i < entradas.length; i += 1) {
+            if (entradas[i].id === start) {
+              return entradas[i];
+            }
+          }
+          return entradas[0] || null;
+        }
+
+        function computeRoute(spaceId, start) {
+          var entry = spaces[spaceId];
+          var origin = resolveStart(start);
+          if (!entry || !origin) {
+            send('routeError', { id: spaceId, message: 'No hay un punto de partida para calcular el camino.' });
+            return;
+          }
+          var startK = nearestWalkable(cellOf(origin.x, origin.y));
+          if (startK < 0) {
+            send('routeError', { id: spaceId, message: 'Ese punto está fuera del campus.' });
+            return;
+          }
+          var path = null;
+          var target = null;
+          // Si el salón no toca ningún pasillo, se amplía el anillo de entrada hasta encontrar acceso.
+          [3, 6, 12].some(function (ring) {
+            target = targetCells(entry.space, ring);
+            path = astar(startK, target);
+            return Boolean(path);
+          });
+          if (!path) {
+            send('routeError', { id: spaceId, message: 'No encontramos un camino hasta ese salón.' });
+            return;
+          }
+          var simple = smooth(path, target);
+          var latlngs = simple.map(function (k) {
+            var c = centerOf(k);
+            return [c[1], c[0]];
+          });
+          // Une la ruta con el punto exacto de partida y con el centro del salón.
+          latlngs.unshift([origin.y, origin.x]);
+          var center = entry.layer.getBounds().getCenter();
+          latlngs.push([center.lat, center.lng]);
+
+          var meters = 0;
+          for (var i = 1; i < latlngs.length; i += 1) {
+            var dx = latlngs[i][1] - latlngs[i - 1][1];
+            var dy = latlngs[i][0] - latlngs[i - 1][0];
+            meters += Math.sqrt(dx * dx + dy * dy) / nav.ppm;
+          }
+
+          if (routeLayer) {
+            map.removeLayer(routeLayer);
+          }
+          routeLayer = L.featureGroup([
+            L.polyline(latlngs, { color: '#ffffff', weight: 9, opacity: 0.95, interactive: false }),
+            L.polyline(latlngs, { color: '#2f6fde', weight: 5, opacity: 1, interactive: false }),
+            L.polyline(latlngs, { color: '#ffffff', weight: 3, opacity: 0.9, interactive: false, className: 'route-line' }),
+            pin(latlngs[0], 'start'),
+            pin(latlngs[latlngs.length - 1], 'end'),
+          ]).addTo(map);
+
+          window.highlightSpace(spaceId, { center: false });
+          map.flyToBounds(routeLayer.getBounds(), { padding: [50, 50], duration: 0.7 });
+
+          var minutes = Math.max(1, Math.round(meters / WALK_SPEED / 60));
+          // El resumen (minutos, metros, piso) lo muestra la app con el mensaje 'route'.
+          showBanner('');
+          send('route', {
+            id: spaceId,
+            distancia: Math.round(meters),
+            minutos: minutes,
+            piso: entry.piso,
+            edificio: entry.space.edificio || null,
+            nombre: entry.space.nombre,
+            desde: origin.nombre || null,
+          });
+        }
+
+        window.routeTo = function (id, start) {
+          var spaceId = String(id || '').trim().toLowerCase();
+          if (!ready) {
+            pending.push(function () {
+              window.routeTo(spaceId, start);
+            });
+            return false;
+          }
+          if (!nav) {
+            send('routeError', { id: spaceId, message: 'Este mapa no tiene datos de caminos.' });
+            return false;
+          }
+          if (!spaces[spaceId]) {
+            send('notFound', { id: spaceId });
+            return false;
+          }
+          if (start === 'tap') {
+            picking = spaceId;
+            window.highlightSpace(spaceId, { center: false });
+            showBanner('Toca el mapa en el lugar donde estás');
+            send('pickStart', {});
+            return true;
+          }
+          computeRoute(spaceId, start);
+          return true;
         };
 
         // ---- Inicialización -----------------------------------------------------------------
@@ -294,6 +896,29 @@
           });
         }
 
+        function addBuildingLabels() {
+          var boxes = {};
+          Object.keys(spaces).forEach(function (id) {
+            var entry = spaces[id];
+            var name = entry.space.edificio;
+            if (!name) {
+              return;
+            }
+            var b = entry.layer.getBounds();
+            boxes[name] = boxes[name] ? boxes[name].extend(b) : L.latLngBounds(b.getSouthWest(), b.getNorthEast());
+          });
+          Object.keys(boxes).forEach(function (name) {
+            L.marker(boxes[name].getCenter(), {
+              interactive: false,
+              keyboard: false,
+              icon: L.divIcon({ className: 'building-label', html: '', iconSize: [0, 0] }),
+            })
+              .addTo(map)
+              .getElement()
+              .appendChild(textNode(name));
+          });
+        }
+
         function init() {
           if (typeof L === 'undefined') {
             showMessage('No se pudo cargar el mapa.');
@@ -301,7 +926,7 @@
             return;
           }
           if (!CONFIG || !CONFIG.plan || !CONFIG.plan.imagen) {
-            showMessage('Este plano todavía no está disponible.');
+            showMessage('El mapa del campus todavía no está disponible.');
             send('error', { message: 'Falta la configuración del plano' });
             return;
           }
@@ -314,52 +939,106 @@
             crs: L.CRS.Simple,
             planBounds: bounds,
             minZoom: -6,
-            maxZoom: 3,
+            maxZoom: 2,
             zoomSnap: 0.25,
             zoomDelta: 0.5,
             attributionControl: false,
-            maxBounds: bounds.pad(0.25),
+            maxBounds: bounds.pad(0.2),
             maxBoundsViscosity: 0.9,
             bounceAtZoomLimits: false,
           });
 
           L.imageOverlay(plan.imagen, bounds).addTo(map);
           map.fitBounds(bounds);
-          // No dejar alejar más allá del plano completo.
           map.setMinZoom(map.getZoom() - 0.5);
 
+          var floorSet = {};
           (plan.espacios || []).forEach(function (space) {
             if (!space || !space.geometria || !space.id) {
               return;
             }
-            var group = L.geoJSON(space.geometria, { style: idleStyle });
-            var layer = group.getLayers()[0];
+            var layer = L.geoJSON(space.geometria, {
+              style: function () {
+                return idleStyle(space);
+              },
+            }).getLayers()[0];
             if (!layer) {
               return;
             }
             var id = String(space.id).toLowerCase();
-            layer.space = space;
-            setIdleTooltip(layer);
-            layer.on('click', function () {
+            var piso = String(space.piso || '1');
+            floorSet[piso] = true;
+            var entry = { space: space, layer: layer, piso: piso };
+            setIdle(entry);
+            layer.on('click', function (event) {
+              if (picking) {
+                return; // el toque se usa para marcar el inicio del camino
+              }
+              L.DomEvent.stop(event);
               window.highlightSpace(id, { center: false });
               send('spacePress', { id: id });
             });
-            layer.addTo(map);
-            layersById[id] = layer;
+            spaces[id] = entry;
           });
+          Object.keys(spaces).forEach(function (id) {
+            var b = spaces[id].layer.getBounds();
+            buildingsBounds = buildingsBounds ? buildingsBounds.extend(b) : L.latLngBounds(b.getSouthWest(), b.getNorthEast());
+          });
+          if (buildingsBounds) {
+            buildingsBounds = buildingsBounds.pad(0.12);
+          }
+          floors = Object.keys(floorSet).sort(function (a, b) {
+            return (parseFloat(a) || 0) - (parseFloat(b) || 0) || a.localeCompare(b);
+          });
+
+          nav = plan.navegacion && plan.navegacion.malla ? decodeGrid(plan.navegacion) : null;
+          if (nav) {
+            nav.entradas = plan.navegacion.entradas || [];
+          }
+
+          map.on('click', function (event) {
+            if (!picking) {
+              return;
+            }
+            var id = picking;
+            picking = null;
+            computeRoute(id, { x: event.latlng.lng, y: event.latlng.lat });
+          });
+
+          addFloorControl();
+          addBuildingLabels();
+          window.fitPlan();
+          // Los nombres de los bloques se encimarían con el mapa muy alejado.
+          var labelZoom = map.getZoom() - 0.25;
+          var toggleLabels = function () {
+            map.getContainer().classList.toggle('hide-buildings', map.getZoom() < labelZoom);
+          };
+          map.on('zoomend', toggleLabels);
+          toggleLabels();
+          ready = true;
+          window.showFloor(floors.indexOf('1') >= 0 ? '1' : floors[0] || '1');
 
           window.addEventListener('resize', function () {
             map.invalidateSize();
           });
 
-          ready = true;
-          send('ready', { planId: plan.id, spaces: Object.keys(layersById).length });
+          send('ready', {
+            planId: plan.id,
+            spaces: Object.keys(spaces).length,
+            floors: floors,
+            navegacion: Boolean(nav),
+            entradas: nav
+              ? nav.entradas.map(function (e) {
+                  return { id: e.id, nombre: e.nombre };
+                })
+              : [],
+          });
 
-          if (pendingId) {
-            var queued = pendingId;
-            pendingId = null;
-            window.highlightSpace(queued);
-          }
+          var queued = pending;
+          pending = [];
+          queued.forEach(function (fn) {
+            fn();
+          });
         }
 
         if (document.readyState === 'loading') {

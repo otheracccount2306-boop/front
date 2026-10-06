@@ -16,6 +16,17 @@ const MAX_RESULTS = 6;
 const fetchPlans = () => getPlans();
 
 /**
+ * @description Elige el mapa del campus entre los planos activos: el que trae malla de caminos o,
+ *              si ninguno la trae, el que tiene más espacios ubicados.
+ * @author Diego Luna <diego.luna@campusucc.edu.co>
+ * @param {Array} plans - Planos del listado
+ * @returns {Object|undefined} Plano del campus
+ */
+export const pickCampusPlan = (plans) =>
+  plans.find((plan) => plan.navegacion) ||
+  plans.slice().sort((a, b) => (b.espaciosDibujados || 0) - (a.espaciosDibujados || 0))[0];
+
+/**
  * @description Hook que lista los planos del campus con caché local (funciona sin conexión).
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @returns {{ plans: Array, loading: boolean, error: string|null, refresh: Function }} Planos y estado

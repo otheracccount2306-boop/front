@@ -25,11 +25,15 @@ El backend acepta cualquier origen por defecto. En producción defina `CORS_ALLO
 
 ## Mapa del campus
 
-La pestaña **Campus → Mapa** muestra el plano del edificio con Leaflet (`L.CRS.Simple`, sin GPS ni teselas) dentro de un WebView. Funciona **sin conexión**: Leaflet va incrustado en el HTML (`npm install` lo genera con `scripts/build-campus-map.js`; también `npm run build:map`), el listado de planos se cachea como el resto de módulos y cada plano (imagen y polígonos) se guarda en su propia clave de AsyncStorage. Solo se vuelve a descargar un plano cuando cambia su `actualizadoEn`.
+La pestaña **Campus → Mapa** muestra **un solo mapa de todo el campus**: el plano general con la planta baja de cada bloque en su posición real y, encima, los salones. Usa Leaflet (`L.CRS.Simple`, sin GPS ni teselas) dentro de un WebView y funciona **sin conexión**: Leaflet va incrustado en el HTML (`npm install` lo genera con `scripts/build-campus-map.js`; también `npm run build:map`) y el plano del campus (imagen, salones y malla de caminos) se guarda en el dispositivo. Solo se vuelve a descargar cuando cambia su `actualizadoEn`.
 
-El estudiante busca un salón por nombre o código (búsqueda local) o pulsa **Ver en el mapa** en el detalle de un espacio. La app envía el UUID al mapa con `injectJavaScript` → `window.highlightSpace(uuid)`, que ilumina el polígono y centra la vista; si el salón está en otro plano, primero cambia de plano. En web, el mismo HTML va en un `iframe` y la app usa `postMessage` (`CampusMapView.web.jsx`).
+- **Pisos:** los salones de cada piso son una capa; el selector de piso está en la esquina del mapa.
+- **Iluminación:** el estudiante busca un salón por nombre o código (búsqueda local) o pulsa **Ver en el mapa** en el detalle de un espacio. La app envía el UUID al mapa (`injectJavaScript` → `window.highlightSpace(uuid)`), que cambia al piso del salón, lo ilumina y centra la vista.
+- **Caminos:** con el salón elegido, **Cómo llegar desde** ofrece las entradas del campus o **Tocar el mapa** para marcar dónde está el estudiante. El mapa calcula la ruta con A* sobre una malla caminable de 0,5 m (exteriores y pasillos; los salones son obstáculos), la dibuja y la app muestra minutos, metros y, si el salón no está en el piso 1, a qué piso subir.
 
-En el panel, **Espacios → Planos** permite subir la imagen del plano (se optimiza en el navegador) y abrir el editor: se elige un espacio de la lista y se dibuja con la herramienta de polígono o rectángulo de Leaflet.draw. Cada trazo, edición de vértices o borrado se guarda solo en la API como GeoJSON; **Exportar GeoJSON** descarga una copia. El editor necesita ratón, así que en móvil muestra un aviso.
+En web, el mismo HTML va en un `iframe` y la app usa `postMessage` (`CampusMapView.web.jsx`).
+
+En el panel, **Espacios → Planos** abre el editor del plano del campus: se elige un espacio de la lista (con filtro por piso) y se dibuja con la herramienta de polígono o rectángulo de Leaflet.draw. Cada trazo, edición de vértices o borrado se guarda solo en la API como GeoJSON; **Exportar GeoJSON** descarga una copia. El editor necesita ratón, así que en móvil muestra un aviso.
 
 Archivos principales: `src/components/campus/map/` (plantilla HTML, `buildMapHtml`, `CampusMapView`), `src/screens/campus/CampusMapScreen.jsx`, `src/hooks/useCampusMap.js`, `src/components/admin/map/` y `src/screens/admin/Plan*.jsx`.
 

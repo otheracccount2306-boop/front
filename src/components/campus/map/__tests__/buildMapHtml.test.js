@@ -6,14 +6,28 @@ const plan = {
   imagen: 'data:image/png;base64,AAAA',
   ancho: 1200,
   alto: 800,
+  navegacion: { version: 1, celdaPx: 5, ancho: 4, alto: 2, malla: '2,4,2', pxPorMetro: 10, entradas: [] },
   espacios: [
     {
       id: '11111111-1111-1111-1111-111111111111',
       nombre: 'Laboratorio </script><script>alert(1)</script>',
       codigo: 'LAB-101',
       categoria: 'LABORATORIO',
+      edificio: 'Bloque 3',
+      piso: '2',
       activo: true,
-      geometria: { type: 'Polygon', coordinates: [[[40, 440], [400, 440], [400, 760], [40, 760], [40, 440]]] },
+      geometria: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [40, 440],
+            [400, 440],
+            [400, 760],
+            [40, 760],
+            [40, 440],
+          ],
+        ],
+      },
     },
   ],
 };
@@ -29,10 +43,12 @@ const readConfig = (html) => {
 };
 
 describe('buildMapHtml', () => {
-  test('incrusta Leaflet, L.CRS.Simple y la función global highlightSpace', () => {
+  test('incrusta Leaflet, L.CRS.Simple y las funciones globales del mapa', () => {
     const html = buildMapHtml(plan);
     expect(html).toContain('L.CRS.Simple');
     expect(html).toContain('window.highlightSpace = function');
+    expect(html).toContain('window.routeTo = function');
+    expect(html).toContain('window.showFloor = function');
     expect(html).not.toContain('__LEAFLET_');
     expect(html).not.toContain('/*__MAP_CONFIG__*/');
     // Leaflet va incrustado: no hay ningún recurso remoto.
@@ -40,7 +56,7 @@ describe('buildMapHtml', () => {
     expect(html).not.toMatch(/<(script|link|img)[^>]+(src|href)=["']https?:|url\(["']?https?:/);
   });
 
-  test('envía el plano, los polígonos y los colores de la app', () => {
+  test('envía el plano, los salones con su piso, la malla de caminos y los colores de la app', () => {
     const config = readConfig(buildMapHtml(plan));
     expect(config.plan).toMatchObject({ id: 'p-1', ancho: 1200, alto: 800, imagen: plan.imagen });
     expect(config.plan.espacios[0]).toEqual({
@@ -48,8 +64,11 @@ describe('buildMapHtml', () => {
       nombre: plan.espacios[0].nombre,
       codigo: 'LAB-101',
       categoria: 'LABORATORIO',
+      edificio: 'Bloque 3',
+      piso: '2',
       geometria: plan.espacios[0].geometria,
     });
+    expect(config.plan.navegacion).toEqual(plan.navegacion);
     expect(config.theme.primary).toBe('#007760');
   });
 

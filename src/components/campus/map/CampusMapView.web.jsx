@@ -12,79 +12,93 @@ import { APP_MESSAGE_SOURCE, buildMapHtml, parseMapMessage } from './buildMapHtm
  * @param {React.Ref} ref - Expone highlight(uuid), clear() y fit()
  * @returns {React.JSX.Element} Mapa del plano
  */
-const CampusMapView = forwardRef(({ plan, selectedId, onSpacePress, onNotFound, onReady }, ref) => {
-  const frameRef = useRef(null);
-  const readyRef = useRef(false);
-  const html = useMemo(() => buildMapHtml(plan), [plan]);
-  const callbacks = useRef({});
-  callbacks.current = { onSpacePress, onNotFound, onReady, selectedId };
+const CampusMapView = forwardRef(
+  ({ plan, selectedId, onSpacePress, onNotFound, onReady, onRoute, onRouteError, onPickStart }, ref) => {
+    const frameRef = useRef(null);
+    const readyRef = useRef(false);
+    const html = useMemo(() => buildMapHtml(plan), [plan]);
+    const callbacks = useRef({});
+    callbacks.current = { onSpacePress, onNotFound, onReady, onRoute, onRouteError, onPickStart, selectedId };
 
-  const post = useCallback((message) => {
-    const frame = frameRef.current;
-    if (frame && frame.contentWindow) {
-      frame.contentWindow.postMessage(JSON.stringify({ source: APP_MESSAGE_SOURCE, ...message }), '*');
-    }
-  }, []);
-
-  const highlight = useCallback((id) => post(id ? { type: 'highlight', id: String(id) } : { type: 'clear' }), [post]);
-
-  useImperativeHandle(
-    ref,
-    () => ({ highlight, clear: () => post({ type: 'clear' }), fit: () => post({ type: 'fit' }) }),
-    [highlight, post],
-  );
-
-  useEffect(() => {
-    readyRef.current = false;
-  }, [html]);
-
-  useEffect(() => {
-    if (readyRef.current) {
-      highlight(selectedId);
-    }
-  }, [selectedId, highlight]);
-
-  useEffect(() => {
-    const onMessage = (event) => {
-      if (!frameRef.current || event.source !== frameRef.current.contentWindow) {
-        return;
+    const post = useCallback((message) => {
+      const frame = frameRef.current;
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage(JSON.stringify({ source: APP_MESSAGE_SOURCE, ...message }), '*');
       }
-      const message = parseMapMessage(event.data);
-      if (!message) {
-        return;
+    }, []);
+
+    const highlight = useCallback((id) => post(id ? { type: 'highlight', id: String(id) } : { type: 'clear' }), [post]);
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        highlight,
+        route: (id, start) => post({ type: 'route', id: String(id), start: start || 'principal' }),
+        clearRoute: () => post({ type: 'clearRoute' }),
+        clear: () => post({ type: 'clear' }),
+        fit: () => post({ type: 'fit' }),
+      }),
+      [highlight, post],
+    );
+
+    useEffect(() => {
+      readyRef.current = false;
+    }, [html]);
+
+    useEffect(() => {
+      if (readyRef.current) {
+        highlight(selectedId);
       }
-      const current = callbacks.current;
-      if (message.type === 'ready') {
-        readyRef.current = true;
-        if (current.selectedId) {
-          highlight(current.selectedId);
+    }, [selectedId, highlight]);
+
+    useEffect(() => {
+      const onMessage = (event) => {
+        if (!frameRef.current || event.source !== frameRef.current.contentWindow) {
+          return;
         }
-        if (current.onReady) {
-          current.onReady(message.payload);
+        const message = parseMapMessage(event.data);
+        if (!message) {
+          return;
         }
-      } else if (message.type === 'spacePress' && current.onSpacePress) {
-        current.onSpacePress(message.payload.id);
-      } else if (message.type === 'notFound' && current.onNotFound) {
-        current.onNotFound(message.payload.id);
-      }
-    };
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-  }, [highlight]);
+        const current = callbacks.current;
+        if (message.type === 'ready') {
+          readyRef.current = true;
+          if (current.selectedId) {
+            highlight(current.selectedId);
+          }
+          if (current.onReady) {
+            current.onReady(message.payload);
+          }
+        } else if (message.type === 'spacePress' && current.onSpacePress) {
+          current.onSpacePress(message.payload.id);
+        } else if (message.type === 'notFound' && current.onNotFound) {
+          current.onNotFound(message.payload.id);
+        } else if (message.type === 'route' && current.onRoute) {
+          current.onRoute(message.payload);
+        } else if (message.type === 'routeError' && current.onRouteError) {
+          current.onRouteError(message.payload.message);
+        } else if (message.type === 'pickStart' && current.onPickStart) {
+          current.onPickStart();
+        }
+      };
+      window.addEventListener('message', onMessage);
+      return () => window.removeEventListener('message', onMessage);
+    }, [highlight]);
 
-  return (
-    <View style={styles.container}>
-      <iframe
-        key={plan.id}
-        ref={frameRef}
-        title={`Plano ${plan.nombre || ''}`}
-        srcDoc={html}
-        sandbox="allow-scripts"
-        style={frameStyle}
-      />
-    </View>
-  );
-});
+    return (
+      <View style={styles.container}>
+        <iframe
+          key={plan.id}
+          ref={frameRef}
+          title={`Plano ${plan.nombre || ''}`}
+          srcDoc={html}
+          sandbox="allow-scripts"
+          style={frameStyle}
+        />
+      </View>
+    );
+  },
+);
 
 CampusMapView.displayName = 'CampusMapView';
 
