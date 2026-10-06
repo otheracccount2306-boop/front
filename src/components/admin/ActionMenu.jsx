@@ -3,19 +3,6 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import colors from '../../theme/colors';
 import { cardShadow, fontSizes, radius, spacing } from '../../theme/typography';
 
-/**
- * @description Menú de acciones de una fila del panel: una hoja modal con las acciones
- *              disponibles. Las acciones de tipo danger se pintan de rojo.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {Array<{ label: string, onPress: Function, variant?: 'default'|'danger' }>} props.actions - Acciones
- * @param {boolean} props.visible - Muestra u oculta el menú
- * @param {Function} props.onClose - Se ejecuta al cerrar el menú
- * @param {string} [props.title] - Título opcional sobre las acciones
- * @returns {React.JSX.Element} Menú de acciones
- */
 const ActionMenu = ({ actions, visible, onClose, title }) => (
   <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
     <Pressable style={styles.overlay} onPress={onClose} accessibilityLabel="Cerrar menú">

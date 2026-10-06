@@ -1,12 +1,5 @@
 import { Linking } from 'react-native';
 
-/**
- * @description Interpreta el campo de contacto de un servicio, que es texto libre, y
- *              determina si es un correo, un teléfono o solo texto.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {string} contacto - Texto de contacto del servicio
- * @returns {{ type: 'mail'|'phone'|'text', label: string, url: string|null }|null} Acción de contacto o null si está vacío
- */
 export const getContactAction = (contacto) => {
   const text = String(contacto || '').trim();
   if (!text) {
@@ -23,12 +16,6 @@ export const getContactAction = (contacto) => {
   return { type: 'text', label: text, url: null };
 };
 
-/**
- * @description Abre el marcador del dispositivo o el cliente de correo según la acción de contacto.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {{ url: string|null }} action - Acción obtenida con getContactAction
- * @returns {Promise<void>} Promesa resuelta al intentar abrir el enlace
- */
 export const openContact = async (action) => {
   if (!action || !action.url) {
     return;

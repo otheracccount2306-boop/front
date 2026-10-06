@@ -17,15 +17,6 @@ import { categoryLabel } from '../../utils/category.utils';
 
 const TABS = SERVICE_TYPES.map((type) => ({ name: type.name, label: type.label }));
 
-/**
- * @description Construye el cuerpo de actualización de un recurso conservando sus datos y cambiando
- *              solo el estado activo.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {'wellbeing'|'department'|'faq'} type - Tipo de recurso
- * @param {Object} item - Recurso del listado administrativo
- * @param {boolean} activo - Nuevo estado activo
- * @returns {Object} Cuerpo de la solicitud de actualización
- */
 const toPayload = (type, item, activo) =>
   type === 'faq'
     ? { pregunta: item.pregunta, respuesta: item.respuesta, categoria: item.categoria, activo }
@@ -39,16 +30,6 @@ const toPayload = (type, item, activo) =>
         activo,
       };
 
-/**
- * @description Pantalla de gestión de servicios con tres pestañas: Bienestar, Directorio y FAQ. Lista
- *              también los registros inactivos y permite crear, editar, activar o desactivar y
- *              eliminar (eliminación lógica).
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.flash trae el mensaje del formulario
- * @returns {React.JSX.Element} Pantalla de gestión de servicios
- */
 const ServicesManagementScreen = ({ navigation, route }) => {
   const [type, setType] = useState('wellbeing');
   const actions = useAdminActions();

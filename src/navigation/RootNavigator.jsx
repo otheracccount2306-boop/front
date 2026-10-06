@@ -11,11 +11,6 @@ import AdminNavigator from './AdminNavigator';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 
-/**
- * @description Pantalla de arranque mostrada mientras se restaura la sesión guardada.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @returns {React.JSX.Element} Pantalla de arranque
- */
 const SplashView = () => (
   <View style={styles.splash}>
     <Text style={styles.splashTitle}>UCC Orientación</Text>
@@ -24,15 +19,6 @@ const SplashView = () => (
   </View>
 );
 
-/**
- * @description Navegador raíz. Restaura la sesión al abrir la app y muestra el navegador de
- *              autenticación o el principal según el estado de sesión. Cuando el interceptor
- *              cierra la sesión por un refresh fallido, el cambio del store devuelve al login.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @returns {React.JSX.Element} Navegador raíz
- */
 const RootNavigator = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);

@@ -11,18 +11,6 @@ import AdminFormSelect from './AdminFormSelect';
 
 const EMPTY = { nombre: '', descripcion: '', categoria: '', fechaInicio: '', fechaFin: '' };
 
-/**
- * @description Modal de creación y edición de un evento del calendario académico. Valida los campos
- *              en el dispositivo (fechas reales y fecha fin no anterior a la de inicio) y delega el
- *              guardado en la pantalla que lo abre.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {boolean} props.visible - Muestra u oculta el modal
- * @param {Object|null} props.event - Evento a editar, o null para crear uno nuevo
- * @param {Function} props.onClose - Se ejecuta al cancelar o cerrar
- * @param {Function} props.onSubmit - Recibe los datos y devuelve una promesa; debe lanzar el mensaje de error si falla
- * @returns {React.JSX.Element} Modal del formulario
- */
 const CalendarEventModal = ({ visible, event, onClose, onSubmit }) => {
   const [values, setValues] = useState(EMPTY);
   const [touched, setTouched] = useState({});

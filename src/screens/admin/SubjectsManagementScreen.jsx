@@ -21,20 +21,8 @@ const MODULE_TABS = [
   { name: 'CalendarManagement', label: 'Calendario' },
 ];
 
-/**
- * @description Consulta todas las asignaturas sin filtros; el periodo se elige en el dispositivo.
- *              Es una referencia estable para el hook de carga.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @returns {Promise<Array>} Asignaturas de cualquier estado y periodo
- */
 const fetchAllSubjects = () => listSubjects();
 
-/**
- * @description Texto del aula en la lista: indica si el estudiante la podrá abrir en el mapa.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} subject - Asignatura
- * @returns {string} Aula con su estado en el mapa, o vacío si no tiene aula
- */
 const roomMeta = (subject) => {
   if (!subject.aula) {
     return '';
@@ -42,16 +30,6 @@ const roomMeta = (subject) => {
   return ` · ${subject.aula}${subject.espacioId ? ' (en el mapa)' : ' (no está en el mapa)'}`;
 };
 
-/**
- * @description Pantalla de gestión de asignaturas. Lista todas las asignaturas, activas e inactivas,
- *              con selector de periodo académico, y permite crear, editar, activar o desactivar y
- *              eliminar (eliminación lógica). Reactivar una asignatura puede fallar por conflicto de aula.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.flash trae el mensaje del formulario
- * @returns {React.JSX.Element} Pantalla de gestión de asignaturas
- */
 const SubjectsManagementScreen = ({ navigation, route }) => {
   const [period, setPeriod] = useState(null);
   const actions = useAdminActions();

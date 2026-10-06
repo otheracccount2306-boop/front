@@ -7,20 +7,6 @@ import { fontSizes, spacing } from '../../theme/typography';
 import AppIcon from '../common/AppIcon';
 import AdminDrawer from './AdminDrawer';
 
-/**
- * @description Encabezado de las pantallas del panel: fondo primaryDark, título en blanco y, según el
- *              contexto, flecha de retroceso o botón de hamburguesa que abre el menú (solo cuando no
- *              hay menú lateral fijo). Admite una acción a la derecha, como el botón de cerrar sesión.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} props.title - Nombre de la sección
- * @param {string} [props.subtitle] - Texto secundario bajo el título
- * @param {Function} [props.onBack] - Si se envía, muestra la flecha de retroceso
- * @param {React.ReactNode} [props.rightAction] - Elemento alineado a la derecha
- * @returns {React.JSX.Element} Encabezado del panel
- */
 const AdminHeader = ({ title, subtitle, onBack, rightAction }) => {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();

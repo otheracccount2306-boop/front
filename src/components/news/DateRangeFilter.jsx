@@ -12,16 +12,6 @@ const PRESETS = [
   { value: 'MONTH', label: 'Este mes' },
 ];
 
-/**
- * @description Selector de rango de fechas para los eventos: atajos (todas, esta semana, este
- *              mes) y dos campos Desde y Hasta con formato AAAA-MM-DD. Solo notifica rangos válidos.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} [props.from] - Fecha inicial aplicada
- * @param {string} [props.to] - Fecha final aplicada
- * @param {Function} props.onChange - Recibe { from, to } cuando el rango es válido
- * @returns {React.JSX.Element} Selector de rango de fechas
- */
 const DateRangeFilter = ({ from, to, onChange }) => {
   const [fromText, setFromText] = useState(from || '');
   const [toText, setToText] = useState(to || '');

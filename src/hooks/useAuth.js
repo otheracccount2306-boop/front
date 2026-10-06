@@ -5,12 +5,6 @@ import useCacheStore from '../store/cache.store';
 import { toFriendlyError } from '../utils/error.utils';
 import { STORAGE_KEYS, clearAll, getJson, getString, setJson, setString } from '../utils/storage.utils';
 
-/**
- * @description Restaura la sesión guardada en AsyncStorage al abrir la aplicación. Si existen el
- *              token y el perfil, rehidrata la caché y marca al usuario como autenticado.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @returns {Promise<void>} Promesa resuelta cuando el estado de sesión quedó definido
- */
 export const bootstrapSession = async () => {
   const [token, user] = await Promise.all([getString(STORAGE_KEYS.jwt), getJson(STORAGE_KEYS.user)]);
   if (token && user) {
@@ -19,13 +13,6 @@ export const bootstrapSession = async () => {
   }
 };
 
-/**
- * @description Hook con las operaciones de autenticación y perfil. Guarda los tokens en
- *              AsyncStorage, mantiene el perfil en el store y traduce los errores del backend a
- *              mensajes amigables en español.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @returns {{ user: Object|null, isAuthenticated: boolean, sessionExpired: boolean, login: Function, register: Function, logout: Function, requestRecovery: Function, loadProfile: Function, saveProfile: Function }} Estado de sesión y operaciones
- */
 const useAuth = () => {
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);

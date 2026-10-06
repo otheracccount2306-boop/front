@@ -7,16 +7,6 @@ import colors from '../theme/colors';
 import { spacing } from '../theme/typography';
 import { SIDEBAR_WIDTH } from './tabItems';
 
-/**
- * @description Menú lateral fijo del panel administrativo para la versión web en pantallas anchas.
- *              Reemplaza a la barra de pestañas: navega entre las siete secciones y permite cerrar
- *              sesión con confirmación.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @param {Object} props - Propiedades entregadas por el Tab Navigator
- * @param {Object} props.state - Estado de navegación de las pestañas
- * @param {Object} props.navigation - Objeto de navegación de las pestañas
- * @returns {React.JSX.Element} Menú lateral del panel
- */
 const AdminSidebar = ({ state, navigation }) => {
   const logout = useAdminLogout();
   const active = state.routes[state.index].name;

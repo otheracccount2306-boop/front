@@ -13,14 +13,6 @@ const REQUIREMENTS = [
   { key: 'special', label: 'Un carácter especial' },
 ];
 
-/**
- * @description Indicador de fortaleza de la contraseña: barra de cuatro segmentos y lista de
- *              requisitos cumplidos.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} props.password - Contraseña escrita por el usuario
- * @returns {React.JSX.Element|null} Indicador, o null si no hay contraseña
- */
 const PasswordStrength = ({ password }) => {
   if (!password) {
     return null;

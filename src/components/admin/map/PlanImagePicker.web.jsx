@@ -5,16 +5,6 @@ import { fontSizes, radius, spacing } from '../../../theme/typography';
 import AppButton from '../../common/AppButton';
 import { preparePlanImage } from './planImage.web';
 
-/**
- * @description Selector de la imagen del plano (solo web). Abre el explorador de archivos, optimiza
- *              la imagen en el navegador y muestra una vista previa con sus dimensiones.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {{ imagen: string, ancho: number, alto: number }|null} props.value - Imagen elegida
- * @param {Function} props.onChange - Recibe { imagen, ancho, alto }
- * @param {string} [props.error] - Mensaje de validación
- * @returns {React.JSX.Element} Selector de imagen
- */
 const PlanImagePicker = ({ value, onChange, error }) => {
   const inputRef = useRef(null);
   const [busy, setBusy] = useState(false);

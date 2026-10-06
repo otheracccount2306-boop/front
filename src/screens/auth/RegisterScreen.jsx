@@ -17,15 +17,6 @@ const INITIAL_VALUES = {
   confirmacion: '',
 };
 
-/**
- * @description Pantalla de registro de estudiantes. Valida cada campo (el error se muestra al salir
- *              del campo), exige aceptar la política de datos y mantiene el botón deshabilitado hasta
- *              que el formulario sea válido. Al registrarse navega al login con un mensaje de éxito.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de registro
- */
 const RegisterScreen = ({ navigation }) => {
   const { register } = useAuth();
   const [values, setValues] = useState(INITIAL_VALUES);

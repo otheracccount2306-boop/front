@@ -1,9 +1,3 @@
-/**
- * @description Genera src/components/campus/map/campusMapTemplate.generated.js: la plantilla del mapa
- *              del campus con Leaflet (JS y CSS) incrustado, para que el WebView funcione sin conexión
- *              y sin depender de un CDN. Se ejecuta en postinstall y con `npm run build:map`.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- */
 const fs = require('fs');
 const path = require('path');
 
@@ -15,7 +9,6 @@ const leafletDir = path.dirname(require.resolve('leaflet/package.json', { paths:
 
 const read = (file) => fs.readFileSync(file, 'utf8');
 
-// Un "</script" dentro del código incrustado cerraría la etiqueta antes de tiempo.
 const escapeScript = (code) => code.replace(/<\/script/gi, '<\\/script');
 
 const html = read(templatePath)

@@ -19,14 +19,6 @@ const MODULE_TABS = [
   { name: 'Events', label: 'Eventos' },
 ];
 
-/**
- * @description Pantalla de eventos institucionales futuros con filtro por categoría y rango de
- *              fechas, y scroll infinito. Los eventos de la semana en curso se destacan.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de eventos
- */
 const EventsScreen = ({ navigation }) => {
   const [category, setCategory] = useState(ALL_VALUE);
   const [range, setRange] = useState({});

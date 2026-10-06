@@ -4,18 +4,6 @@ import colors from '../../theme/colors';
 import { fontSizes, radius, spacing } from '../../theme/typography';
 import AppIcon from './AppIcon';
 
-/**
- * @description Barra de búsqueda con borde aqua, lupa a la izquierda y botón para limpiar el texto.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} props.value - Texto actual
- * @param {Function} props.onChangeText - Se ejecuta al cambiar el texto
- * @param {string} [props.placeholder] - Texto de ayuda
- * @param {boolean} [props.autoFocus] - Enfoca el campo al mostrarse
- * @returns {React.JSX.Element} Barra de búsqueda
- */
 const SearchBar = ({ value, onChangeText, placeholder = 'Buscar', autoFocus = false }) => (
   <View style={styles.wrapper}>
     <AppIcon name="search" size={18} color={colors.aqua} />

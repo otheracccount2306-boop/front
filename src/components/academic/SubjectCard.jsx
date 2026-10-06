@@ -7,16 +7,6 @@ import AppCard from '../common/AppCard';
 import AppIcon from '../common/AppIcon';
 import ShowOnMapLink from '../campus/ShowOnMapLink';
 
-/**
- * @description Tarjeta de una asignatura del horario con barra de color a la izquierda, nombre,
- *              docente, aula y franja horaria. Si el aula está ubicada en el mapa del campus
- *              (subject.espacioId), muestra el enlace "Ver en mapa".
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {Object} props.subject - Asignatura del horario
- * @param {Function} [props.onShowOnMap] - Recibe la asignatura para abrir su aula en el mapa
- * @returns {React.JSX.Element} Tarjeta de asignatura
- */
 const SubjectCard = ({ subject, onShowOnMap }) => (
   <AppCard style={styles.card}>
     <View style={[styles.bar, { backgroundColor: getCategoryColor(subject.codigo) }]} />

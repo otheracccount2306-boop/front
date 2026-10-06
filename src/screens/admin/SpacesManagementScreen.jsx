@@ -16,24 +16,8 @@ import useRemoteResource from '../../hooks/useRemoteResource';
 import { ADMIN_SPACES_TABS } from '../../utils/admin.utils';
 import { ALL_VALUE, SPACE_CHIPS, categoryLabel } from '../../utils/category.utils';
 
-/**
- * @description Consulta todos los espacios sin filtros; el filtro por categoría se aplica en el
- *              dispositivo. Es una referencia estable para el hook de carga.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @returns {Promise<Array>} Espacios de cualquier estado
- */
 const fetchAllSpaces = () => listAllSpaces();
 
-/**
- * @description Pantalla de gestión de espacios del campus. Lista todos los espacios, activos e
- *              inactivos, con filtro por categoría, y permite crear, editar, activar o desactivar y
- *              eliminar (eliminación lógica).
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.flash trae el mensaje del formulario
- * @returns {React.JSX.Element} Pantalla de gestión de espacios
- */
 const SpacesManagementScreen = ({ navigation, route }) => {
   const [category, setCategory] = useState(ALL_VALUE);
   const actions = useAdminActions();

@@ -6,10 +6,6 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
 import colors from '../../../theme/colors';
 
-/**
- * Textos de la barra de Leaflet.draw en español. Solo se usan polígono y rectángulo, más editar y
- * borrar; el resto de herramientas está desactivado.
- */
 const applySpanishLabels = () => {
   const local = L.drawLocal;
   local.draw.toolbar.buttons.polygon = 'Dibujar el espacio (polígono)';
@@ -39,7 +35,6 @@ const applySpanishLabels = () => {
   local.edit.handlers.remove.tooltip = { text: 'Haz clic en un espacio para quitarlo.' };
 };
 
-/** Estilos propios del editor: etiquetas de código y barra deshabilitada sin espacio elegido. */
 const EDITOR_CSS = `
 .plan-editor .space-code {
   background: ${colors.white};
@@ -63,11 +58,6 @@ const EDITOR_CSS = `
 
 let cssInjected = false;
 
-/**
- * @description Inserta una sola vez la hoja de estilos del editor.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @returns {void}
- */
 const injectEditorCss = () => {
   if (cssInjected) {
     return;
@@ -78,28 +68,12 @@ const injectEditorCss = () => {
   cssInjected = true;
 };
 
-/**
- * @description Crea un nodo de texto para una etiqueta: los nombres vienen de la base de datos y no
- *              deben interpretarse como HTML.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {string} text - Texto de la etiqueta
- * @returns {HTMLElement} Elemento span con el texto
- */
 const textLabel = (text) => {
   const span = document.createElement('span');
   span.textContent = text || '';
   return span;
 };
 
-/**
- * @description Ajusta los vértices al rectángulo de la imagen para que nunca se guarde un polígono
- *              fuera del plano, aunque el clic haya caído en el borde gris.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} geometry - GeoJSON Polygon producido por Leaflet ([x, y] = [lng, lat])
- * @param {number} ancho - Ancho del plano en píxeles
- * @param {number} alto - Alto del plano en píxeles
- * @returns {Object} GeoJSON Polygon dentro de la imagen
- */
 export const clampToPlan = (geometry, ancho, alto) => ({
   type: 'Polygon',
   coordinates: geometry.coordinates.map((ring) =>
@@ -113,24 +87,6 @@ export const clampToPlan = (geometry, ancho, alto) => ({
 const idleStyle = () => ({ color: colors.primary, weight: 2, fillColor: colors.light, fillOpacity: 0.25 });
 const selectedStyle = () => ({ color: colors.primaryDark, weight: 3, fillColor: colors.accent, fillOpacity: 0.5 });
 
-/**
- * @description Editor visual de planos (solo web) con Leaflet + Leaflet.draw sobre L.CRS.Simple. Muestra
- *              la imagen del plano y los polígonos ya guardados; el administrador elige un espacio en
- *              la lista y lo dibuja con la herramienta de polígono o rectángulo. Cada trazo, edición o
- *              borrado se convierte en GeoJSON y se entrega a los callbacks, que lo guardan en la API
- *              sin que el administrador vea ni escriba código.
- *              Es un componente controlado: dibuja exactamente lo que llega en `shapes`.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {Object} props.plan - Plano con imagen, ancho y alto
- * @param {Object<string, {geometria: Object, codigo: string}>} props.shapes - Polígonos por UUID de espacio
- * @param {string|null} props.selectedId - Espacio elegido en la lista; habilita el dibujo
- * @param {Function} props.onSelect - Recibe el UUID del polígono en el que se hizo clic
- * @param {Function} props.onDraw - Recibe la geometría GeoJSON del nuevo trazo del espacio elegido
- * @param {Function} props.onEdit - Recibe [{ id, geometria }] con los polígonos modificados
- * @param {Function} props.onRemove - Recibe [id] de los espacios quitados del plano
- * @returns {React.JSX.Element} Lienzo del editor
- */
 const PlanDrawingEditor = ({ plan, shapes, selectedId, onSelect, onDraw, onEdit, onRemove }) => {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -139,7 +95,6 @@ const PlanDrawingEditor = ({ plan, shapes, selectedId, onSelect, onDraw, onEdit,
   const propsRef = useRef({});
   propsRef.current = { selectedId, onSelect, onDraw, onEdit, onRemove };
 
-  // Mapa: se crea una vez por plano.
   useEffect(() => {
     injectEditorCss();
     applySpanishLabels();
@@ -156,7 +111,6 @@ const PlanDrawingEditor = ({ plan, shapes, selectedId, onSelect, onDraw, onEdit,
     });
     L.imageOverlay(plan.imagen, bounds).addTo(map);
     map.fitBounds(bounds);
-    // En planos grandes (el campus completo) los códigos se encimarían: solo se ven al acercarse.
     const codesZoom = map.getZoom() + (Math.max(plan.ancho, plan.alto) > 3000 ? 1.5 : 0);
     const toggleCodes = () => {
       const wrapper = containerRef.current && containerRef.current.parentElement;
@@ -186,7 +140,6 @@ const PlanDrawingEditor = ({ plan, shapes, selectedId, onSelect, onDraw, onEdit,
 
     map.on(L.Draw.Event.CREATED, (event) => {
       const { selectedId: target, onDraw: handle } = propsRef.current;
-      // La capa nueva no se agrega al mapa: el padre guarda y la redibuja desde `shapes`.
       if (target) {
         handle(geometryOf(event.layer));
       }
@@ -206,7 +159,6 @@ const PlanDrawingEditor = ({ plan, shapes, selectedId, onSelect, onDraw, onEdit,
       }
     });
 
-    // Si el plano se veía completo, al cambiar el tamaño del lienzo se vuelve a encuadrar.
     const resize = new ResizeObserver(() => {
       const wasWhole = map.getBounds().contains(bounds);
       map.invalidateSize();
@@ -227,7 +179,6 @@ const PlanDrawingEditor = ({ plan, shapes, selectedId, onSelect, onDraw, onEdit,
     };
   }, [plan.id, plan.imagen, plan.ancho, plan.alto]);
 
-  // Polígonos: se sincronizan con `shapes` sin rehacer el mapa.
   useEffect(() => {
     const group = groupRef.current;
     if (!group) {
@@ -258,7 +209,6 @@ const PlanDrawingEditor = ({ plan, shapes, selectedId, onSelect, onDraw, onEdit,
     });
   }, [shapes, plan.id]);
 
-  // Selección: resalta el espacio elegido y habilita o no las herramientas de dibujo.
   useEffect(() => {
     layersRef.current.forEach((layer, id) => {
       layer.setStyle(id === selectedId ? selectedStyle() : idleStyle());
@@ -274,7 +224,6 @@ const PlanDrawingEditor = ({ plan, shapes, selectedId, onSelect, onDraw, onEdit,
 
   return (
     <View style={styles.container}>
-      {/* La clase va en un contenedor externo: Leaflet agrega sus propias clases al div del mapa. */}
       <div className={`plan-editor${selectedId ? '' : ' no-selection'}`} style={canvasStyle}>
         <div ref={containerRef} style={canvasStyle} />
       </div>

@@ -5,17 +5,6 @@ import colors from '../theme/colors';
 import { fontSizes, spacing } from '../theme/typography';
 import { SIDEBAR_WIDTH, TAB_ITEMS } from './tabItems';
 
-/**
- * @description Menú lateral para la versión web en pantallas anchas. Reemplaza a la barra
- *              inferior de pestañas y navega entre las mismas cinco secciones.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades entregadas por el Tab Navigator
- * @param {Object} props.state - Estado de navegación de las pestañas
- * @param {Object} props.navigation - Objeto de navegación de las pestañas
- * @returns {React.JSX.Element} Menú lateral
- */
 const WebSidebar = ({ state, navigation }) => (
   <View style={styles.sidebar}>
     <Text style={styles.brand}>UCC Orientación</Text>

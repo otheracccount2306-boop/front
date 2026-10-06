@@ -3,14 +3,6 @@ import { loadCache, saveCache } from '../utils/storage.utils';
 
 const EMPTY = { schedule: [], spaces: [], faq: [], calendar: [], plans: [] };
 
-/**
- * @description Store Zustand de la caché de datos (horario, espacios, preguntas frecuentes,
- *              calendario y planos del campus). Cada escritura se persiste en AsyncStorage y se puede rehidratar al
- *              abrir la aplicación. También guarda si la app está sin conexión.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- */
 const useCacheStore = create((set) => ({
   ...EMPTY,
   isOffline: false,

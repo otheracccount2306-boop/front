@@ -32,11 +32,6 @@ const plan = {
   ],
 };
 
-/**
- * @description Extrae la configuración incrustada en el HTML del mapa.
- * @param {string} html - Documento generado
- * @returns {Object} Configuración del mapa
- */
 const readConfig = (html) => {
   const match = html.match(/var CONFIG = (\{.*?\});\n/s);
   return JSON.parse(match[1]);
@@ -51,7 +46,6 @@ describe('buildMapHtml', () => {
     expect(html).toContain('window.showFloor = function');
     expect(html).not.toContain('__LEAFLET_');
     expect(html).not.toContain('/*__MAP_CONFIG__*/');
-    // Leaflet va incrustado: no hay ningún recurso remoto.
     expect(html).not.toMatch(/<script[^>]+src=/);
     expect(html).not.toMatch(/<(script|link|img)[^>]+(src|href)=["']https?:|url\(["']?https?:/);
   });

@@ -4,27 +4,6 @@ import colors from '../../theme/colors';
 import { fontSizes, radius, spacing } from '../../theme/typography';
 import AppIcon from './AppIcon';
 
-/**
- * @description Campo de texto con etiqueta y mensaje de error. Cuando secureTextEntry es true
- *              incluye un ojo para mostrar u ocultar el contenido.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} [props.label] - Etiqueta sobre el campo
- * @param {string} props.value - Valor actual
- * @param {Function} props.onChangeText - Se ejecuta al cambiar el texto
- * @param {string} [props.placeholder] - Texto de ayuda
- * @param {boolean} [props.secureTextEntry] - Oculta el texto y muestra el ojo
- * @param {string} [props.error] - Mensaje de error; si existe el borde se pinta de rojo
- * @param {boolean} [props.editable] - false para mostrar el campo de solo lectura
- * @param {Function} [props.onBlur] - Se ejecuta al perder el foco
- * @param {string} [props.keyboardType] - Tipo de teclado
- * @param {string} [props.autoCapitalize] - Política de mayúsculas automáticas
- * @param {number} [props.maxLength] - Longitud máxima
- * @param {string} [props.testID] - Identificador para pruebas
- * @returns {React.JSX.Element} Campo de texto
- */
 const AppInput = ({
   label,
   value,

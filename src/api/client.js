@@ -23,28 +23,11 @@ const apiClient = axios.create({
 let isRefreshing = false;
 let pendingQueue = [];
 
-/**
- * @description Resuelve o rechaza todas las solicitudes que esperaban la renovación del token.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object|null} error - Error de la renovación, o null si fue exitosa
- * @param {string|null} token - Nuevo access token, o null si falló
- * @returns {void}
- */
 const flushQueue = (error, token) => {
   pendingQueue.forEach((pending) => (error ? pending.reject(error) : pending.resolve(token)));
   pendingQueue = [];
 };
 
-/**
- * @description Termina la sesión localmente: borra el almacenamiento, vacía la caché y marca la
- *              sesión como expirada. RootNavigator reacciona a este cambio y muestra el login.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @returns {Promise<void>} Promesa resuelta al terminar la limpieza
- */
 const endSession = async () => {
   await clearAll();
   useCacheStore.getState().reset();
@@ -52,26 +35,8 @@ const endSession = async () => {
   useAuthStore.getState().clearAuth();
 };
 
-/**
- * @description Indica si una URL pertenece a los endpoints de autenticación, que nunca
- *              intentan renovar el token porque su 401 significa credenciales inválidas.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {string} url - URL relativa de la solicitud
- * @returns {boolean} true si es un endpoint /auth/*
- */
 const isAuthUrl = (url) => String(url || '').startsWith('/auth/');
 
-/**
- * @description Responde una solicitud fallida por falta de conexión con los datos de la caché,
- *              cuando existen. Marca la app como sin conexión.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} error - Error de Axios sin respuesta del servidor
- * @returns {Promise<Object>} Respuesta simulada con datos de la caché, o rechazo si no hay caché
- */
 const handleNetworkError = (error) => {
   const cacheStore = useCacheStore.getState();
   cacheStore.setOffline(true);

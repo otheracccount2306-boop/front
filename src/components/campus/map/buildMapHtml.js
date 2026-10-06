@@ -3,34 +3,16 @@ import template from './campusMapTemplate.generated';
 
 const CONFIG_MARKER = '/*__MAP_CONFIG__*/null';
 
-/** Origen de los mensajes que la app envía al mapa; el mapa ignora cualquier otro. */
 export const APP_MESSAGE_SOURCE = 'ucc-campus-app';
 
-/** Origen de los mensajes que el mapa envía a la app. */
 export const MAP_MESSAGE_SOURCE = 'ucc-campus-map';
 
-/**
- * @description Serializa un valor para incrustarlo dentro de una etiqueta script sin que un texto
- *              como "</script>" o los separadores de línea U+2028/U+2029 rompan el HTML.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {any} value - Valor serializable
- * @returns {string} JSON seguro para un script en línea
- */
 export const toScriptJson = (value) =>
   JSON.stringify(value)
     .replace(/</g, '\\u003c')
     .replace(/\u2028/g, '\\u2028')
     .replace(/\u2029/g, '\\u2029');
 
-/**
- * @description Arma el HTML autocontenido del mapa: Leaflet, el fondo vectorial del campus (lote y
- *              bloques, en navegacion.base), los espacios de todos los pisos, la malla de caminos y
- *              los colores de la app. La imagen del plano solo se usa si el plano no trae fondo
- *              vectorial. No necesita conexión para mostrarse.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} plan - Plano con ancho, alto, espacios, navegación e imagen opcional (GET /campus/plans/{id})
- * @returns {string} Documento HTML para el WebView o el iframe
- */
 export const buildMapHtml = (plan) => {
   const config = {
     plan: {
@@ -66,12 +48,6 @@ export const buildMapHtml = (plan) => {
   return template.replace(CONFIG_MARKER, () => toScriptJson(config));
 };
 
-/**
- * @description Interpreta un mensaje recibido desde el mapa.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {string|Object} raw - Texto JSON o el objeto ya deserializado
- * @returns {{ type: string, payload: Object }|null} Mensaje del mapa, o null si no viene del mapa
- */
 export const parseMapMessage = (raw) => {
   let data = raw;
   if (typeof raw === 'string') {

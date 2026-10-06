@@ -6,14 +6,6 @@ import colors from '../../theme/colors';
 import { fontSizes, spacing } from '../../theme/typography';
 import AppIcon from './AppIcon';
 
-/**
- * @description Banner rojo en la parte superior, visible solo cuando la app no tiene conexión
- *              con el servidor.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @returns {React.JSX.Element|null} Banner, o null cuando hay conexión
- */
 const OfflineBanner = () => {
   const isOffline = useCacheStore((state) => state.isOffline);
   const insets = useSafeAreaInsets();

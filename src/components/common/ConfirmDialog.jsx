@@ -4,24 +4,6 @@ import colors from '../../theme/colors';
 import { cardShadow, fontSizes, radius, spacing } from '../../theme/typography';
 import AppButton from './AppButton';
 
-/**
- * @description Diálogo de confirmación propio. Reemplaza a Alert.alert, que no funciona en la
- *              versión web de React Native.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {boolean} props.visible - Muestra u oculta el diálogo
- * @param {string} props.title - Título del diálogo
- * @param {string} props.message - Texto explicativo
- * @param {string} props.confirmLabel - Texto del botón de confirmación
- * @param {Function} props.onConfirm - Se ejecuta al confirmar
- * @param {Function} props.onCancel - Se ejecuta al cancelar
- * @param {boolean} [props.loading] - Muestra carga en el botón de confirmación
- * @param {boolean} [props.confirmDisabled] - Deshabilita el botón de confirmación
- * @param {React.ReactNode} [props.children] - Contenido extra debajo del mensaje (por ejemplo, un campo)
- * @returns {React.JSX.Element} Diálogo modal
- */
 const ConfirmDialog = ({
   visible,
   title,

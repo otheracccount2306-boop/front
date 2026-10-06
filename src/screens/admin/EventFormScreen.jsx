@@ -32,12 +32,6 @@ const EMPTY = {
   estado: 'ACTIVO',
 };
 
-/**
- * @description Convierte un evento del backend en los valores del formulario.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object|undefined} event - Evento a editar, o undefined al crear
- * @returns {Object} Valores iniciales del formulario
- */
 const toFormValues = (event) => {
   if (!event) {
     return EMPTY;
@@ -55,16 +49,6 @@ const toFormValues = (event) => {
   };
 };
 
-/**
- * @description Pantalla de creación y edición de eventos. La fecha y la hora se escriben como
- *              AAAA-MM-DD y HH:mm (la app no usa librerías de selección de fecha). Un evento activo debe
- *              tener fecha de hoy o futura. Pide confirmación al salir con cambios sin guardar.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.event es el evento a editar
- * @returns {React.JSX.Element} Formulario de evento
- */
 const EventFormScreen = ({ navigation, route }) => {
   const event = route.params ? route.params.event : undefined;
   const initial = useMemo(() => toFormValues(event), [event]);

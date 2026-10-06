@@ -6,15 +6,6 @@ import { categoryLabel } from '../../utils/category.utils';
 import AppBadge from '../common/AppBadge';
 import AppIcon from '../common/AppIcon';
 
-/**
- * @description Tarjeta de un espacio del campus con franja de color superior, nombre, categoría,
- *              ubicación y referencia para llegar.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {Object} props.space - Espacio del campus
- * @param {Function} props.onPress - Se ejecuta al tocar la tarjeta
- * @returns {React.JSX.Element} Tarjeta de espacio
- */
 const SpaceCard = ({ space, onPress }) => {
   const location = [space.edificio, space.piso].filter(Boolean).join(' · ');
 

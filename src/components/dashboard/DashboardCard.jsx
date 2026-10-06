@@ -7,19 +7,6 @@ import AppIcon from '../common/AppIcon';
 import AppLoader from '../common/AppLoader';
 import ErrorBanner from '../common/ErrorBanner';
 
-/**
- * @description Tarjeta del dashboard con título e ícono. Muestra su propio estado de carga y su
- *              propio error, de modo que la falla de un módulo no afecte a los demás.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} props.title - Título de la tarjeta
- * @param {string} props.icon - Ícono de Ionicons
- * @param {boolean} [props.loading] - Muestra el indicador de carga
- * @param {string|null} [props.error] - Mensaje de error localizado en esta tarjeta
- * @param {Function} [props.onPress] - Si se envía, la tarjeta es tocable
- * @param {React.ReactNode} props.children - Contenido de la tarjeta
- * @returns {React.JSX.Element} Tarjeta del dashboard
- */
 const DashboardCard = ({ title, icon, loading = false, error = null, onPress, children }) => {
   const body = (
     <AppCard style={styles.card}>

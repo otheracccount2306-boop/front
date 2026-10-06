@@ -16,16 +16,6 @@ import { emptyToNull, getAdminErrorMessage } from '../../utils/admin.utils';
 
 const EMPTY = { nombre: '', edificio: '', piso: '', activo: true };
 
-/**
- * @description Pantalla de creación y edición de un plano del campus: nombre, edificio, piso e imagen.
- *              La imagen se optimiza en el navegador antes de enviarla. Al crear un plano lleva
- *              directo al editor para dibujar los espacios.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.planId es el plano a editar
- * @returns {React.JSX.Element} Formulario de plano
- */
 const PlanFormScreen = ({ navigation, route }) => {
   const planId = route.params ? route.params.planId : undefined;
   const [values, setValues] = useState(EMPTY);

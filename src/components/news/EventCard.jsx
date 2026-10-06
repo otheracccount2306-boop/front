@@ -8,14 +8,6 @@ import AppBadge from '../common/AppBadge';
 import AppCard from '../common/AppCard';
 import AppIcon from '../common/AppIcon';
 
-/**
- * @description Tarjeta de un evento con barra de color por categoría, nombre, fecha y hora,
- *              lugar y cupos. Los eventos de la semana en curso se destacan con fondo pale.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {Object} props.event - Evento institucional
- * @returns {React.JSX.Element} Tarjeta de evento
- */
 const EventCard = ({ event }) => {
   const thisWeek = isInCurrentWeek(event.fechaHora);
 

@@ -8,16 +8,6 @@ import { spacing } from '../../theme/typography';
 import ConfirmDialog from '../common/ConfirmDialog';
 import AdminMenu from './AdminMenu';
 
-/**
- * @description Cajón lateral del menú administrativo para la versión móvil. Se abre desde el botón de
- *              hamburguesa del encabezado, navega a la sección elegida y ofrece cerrar sesión con
- *              confirmación.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {boolean} props.visible - Muestra u oculta el cajón
- * @param {Function} props.onClose - Se ejecuta al cerrar el cajón
- * @returns {React.JSX.Element} Cajón de navegación
- */
 const AdminDrawer = ({ visible, onClose }) => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();

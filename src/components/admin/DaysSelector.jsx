@@ -4,16 +4,6 @@ import colors from '../../theme/colors';
 import { fontSizes, radius, spacing } from '../../theme/typography';
 import { SUBJECT_DAYS } from '../../utils/admin.utils';
 
-/**
- * @description Selector de días de clase con casillas visuales. Construye la lista de días en
- *              mayúsculas y sin tildes, en orden de semana, tal como la espera el backend.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string[]} props.value - Días elegidos, por ejemplo ["LUNES", "MIERCOLES"]
- * @param {Function} props.onChange - Recibe la nueva lista de días
- * @param {string} [props.error] - Mensaje de error
- * @returns {React.JSX.Element} Selector de días
- */
 const DaysSelector = ({ value, onChange, error }) => {
   const toggle = (day) => {
     const next = value.includes(day) ? value.filter((item) => item !== day) : [...value, day];

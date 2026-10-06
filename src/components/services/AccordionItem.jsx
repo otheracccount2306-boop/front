@@ -5,15 +5,6 @@ import { fontSizes, spacing } from '../../theme/typography';
 import AppCard from '../common/AppCard';
 import AppIcon from '../common/AppIcon';
 
-/**
- * @description Acordeón de una pregunta frecuente: la pregunta se muestra en negrita y la
- *              respuesta aparece al tocar. Empieza colapsado.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} props.question - Texto de la pregunta
- * @param {string} props.answer - Texto de la respuesta
- * @returns {React.JSX.Element} Acordeón
- */
 const AccordionItem = ({ question, answer }) => {
   const [expanded, setExpanded] = useState(false);
 

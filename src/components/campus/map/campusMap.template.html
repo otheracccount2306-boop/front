@@ -1,44 +1,4 @@
 <!DOCTYPE html>
-<!--
-  Mapa del campus · UCC Santa Marta
-
-  Un solo mapa para todo el campus. No se muestra el plano arquitectónico: el fondo es vectorial
-  (el lote y el contorno de cada bloque, en navegacion.base) y encima solo aparecen los espacios a
-  los que entran estudiantes y docentes (aulas, salas de cómputo, laboratorios, facultades,
-  oficinas de atención, cafeterías, baños y pasillos). Los espacios de servicio llegan inactivos
-  desde la API y no se dibujan. Si un plano no trae fondo vectorial (uno subido a mano por el
-  administrador), se usa su imagen como respaldo.
-
-  Se muestra dentro de un WebView (móvil) o un iframe (web) y funciona sin conexión: Leaflet va
-  incrustado (scripts/build-campus-map.js). Sin teselas, satélite ni GPS.
-
-  Marcadores que se reemplazan:
-    LEAFLET_CSS / LEAFLET_JS  → en build, con node_modules/leaflet/dist (campusMapTemplate.generated.js)
-    MAP_CONFIG                → en ejecución, con buildMapHtml(plan)
-
-  Coordenadas: L.CRS.Simple con límites [[0, 0], [alto, ancho]]. Una unidad = un píxel de la imagen.
-  Los salones son GeoJSON Polygon con posiciones [x, y] (x desde la izquierda, y desde abajo).
-
-  API global (la app la llama con injectJavaScript o postMessage):
-    window.highlightSpace(uuid)      ilumina el salón, cambia al piso donde está y centra la vista
-    window.clearHighlight()          quita la selección
-    window.showFloor(piso)           muestra los salones de un piso
-    window.routeTo(uuid, inicio)     dibuja el camino hasta el salón; inicio = id de una entrada,
-                                     'tap' (el estudiante toca el mapa) o {x, y} en píxeles
-    window.clearRoute()              borra el camino
-    window.fitPlan()                 muestra el campus completo
-
-  Mensajes hacia la app ({ source: 'ucc-campus-map', type, payload }):
-    ready        { planId, spaces, floors, entradas, navegacion }
-    highlighted  { id, piso }
-    notFound     { id }
-    spacePress   { id }
-    floor        { piso }
-    pickStart    {}                        esperando a que el estudiante toque su ubicación
-    route        { id, distancia, minutos, piso, edificio, nombre }
-    routeError   { id, message }
-    error        { message }
--->
 <html lang="es">
   <head>
     <meta charset="utf-8" />
@@ -100,7 +60,6 @@
           stroke-opacity: 0.45;
         }
       }
-      /* Nombre de cada bloque sobre el mapa */
       .building-label {
         background: transparent;
         border: 0;
@@ -120,7 +79,6 @@
         font-weight: 800;
         padding: 1px 7px;
       }
-      /* Selector de piso */
       .floor-control {
         background: var(--white, #fff);
         border-radius: 10px;
@@ -151,7 +109,6 @@
         background: var(--primary, #007760);
         color: var(--white, #fff);
       }
-      /* Camino */
       .route-line {
         stroke-dasharray: 2 14;
         animation: route-dash 1.2s linear infinite;
@@ -225,12 +182,12 @@
 
         var SOURCE_MAP = 'ucc-campus-map';
         var SOURCE_APP = 'ucc-campus-app';
-        var WALK_SPEED = 1.2; // m/s
+        var WALK_SPEED = 1.2;
 
         var map = null;
         var ready = false;
         var theme = {};
-        var spaces = {}; // id -> { space, layer, piso }
+        var spaces = {};
         var floors = [];
         var currentFloor = null;
         var floorButtons = {};
@@ -238,10 +195,8 @@
         var pending = [];
         var nav = null;
         var routeLayer = null;
-        var picking = null; // id del destino mientras se espera el toque de inicio
+        var picking = null;
         var banner = document.getElementById('banner');
-
-        // ---- Comunicación con la app ------------------------------------------------------
 
         function send(type, payload) {
           var text = JSON.stringify({ source: SOURCE_MAP, type: type, payload: payload || {} });
@@ -280,7 +235,6 @@
         }
 
         window.addEventListener('message', onAppMessage);
-        // Android (react-native-webview) entrega postMessage en document, no en window.
         document.addEventListener('message', onAppMessage);
 
         window.onerror = function (message) {
@@ -291,8 +245,6 @@
           banner.textContent = text || '';
           banner.className = text ? 'map-banner visible' : 'map-banner';
         }
-
-        // ---- Estilos ----------------------------------------------------------------------
 
         function categoryColor(categoria) {
           return (
@@ -320,7 +272,6 @@
           return { color: theme.primary, weight: 3, opacity: 1, fillColor: theme.accent, fillOpacity: 0.6 };
         }
 
-        // Los nombres vienen del panel administrativo: se insertan como texto, nunca como HTML.
         function textNode(text) {
           var span = document.createElement('span');
           span.textContent = text || '';
@@ -360,8 +311,6 @@
             element.classList.add('space-pulse');
           }
         }
-
-        // ---- Pisos ------------------------------------------------------------------------
 
         window.showFloor = function (piso) {
           piso = String(piso);
@@ -422,8 +371,6 @@
           map.addControl(new FloorControl());
         }
 
-        // ---- Iluminación --------------------------------------------------------------------
-
         window.highlightSpace = function (id, options) {
           var spaceId = String(id || '').trim().toLowerCase();
           if (!ready) {
@@ -466,14 +413,11 @@
 
         var buildingsBounds = null;
 
-        // Vista inicial: la zona de los edificios, no todo el lote (las canchas dejan todo muy pequeño).
         window.fitPlan = function () {
           if (map) {
             map.fitBounds(buildingsBounds || map.options.planBounds, { padding: [10, 10] });
           }
         };
-
-        // ---- Caminos (A* sobre la malla caminable) ---------------------------------------
 
         function decodeGrid(navegacion) {
           var w = navegacion.ancho;
@@ -517,8 +461,6 @@
           return inside;
         }
 
-        // Celdas del salón más un anillo alrededor: el camino entra al salón desde el pasillo o
-        // el exterior más cercano (los planos no marcan las puertas).
         function targetCells(space, ring) {
           var coords = space.geometria.coordinates[0];
           var minx = Infinity;
@@ -584,7 +526,7 @@
           }
           var best = -1;
           var bestD = Infinity;
-          var radius = 80; // 40 m
+          var radius = 80;
           for (var j = Math.max(0, start.j - radius); j <= Math.min(nav.h - 1, start.j + radius); j += 1) {
             for (var i = Math.max(0, start.i - radius); i <= Math.min(nav.w - 1, start.i + radius); i += 1) {
               if (nav.cells[j * nav.w + i]) {
@@ -599,7 +541,6 @@
           return best;
         }
 
-        // Montículo binario mínimo para la lista abierta del A*.
         function Heap() {
           this.keys = [];
           this.prio = [];
@@ -707,7 +648,6 @@
               if (closed[nk] || !(nav.cells[nk] || target.cells[nk])) {
                 continue;
               }
-              // En diagonal no se cortan esquinas de muros.
               if (d >= 4 && !((nav.cells[j * w + ni] || target.cells[j * w + ni]) && (nav.cells[nj * w + i] || target.cells[nj * w + i]))) {
                 continue;
               }
@@ -742,7 +682,6 @@
           return true;
         }
 
-        // Quita los zigzags de la malla: une puntos que se ven entre sí.
         function smooth(path, target) {
           if (path.length < 3) {
             return path;
@@ -803,7 +742,6 @@
           }
           var path = null;
           var target = null;
-          // Si el salón no toca ningún pasillo, se amplía el anillo de entrada hasta encontrar acceso.
           [3, 6, 12].some(function (ring) {
             target = targetCells(entry.space, ring);
             path = astar(startK, target);
@@ -818,7 +756,6 @@
             var c = centerOf(k);
             return [c[1], c[0]];
           });
-          // Une la ruta con el punto exacto de partida y con el centro del salón.
           latlngs.unshift([origin.y, origin.x]);
           var center = entry.layer.getBounds().getCenter();
           latlngs.push([center.lat, center.lng]);
@@ -845,7 +782,6 @@
           map.flyToBounds(routeLayer.getBounds(), { padding: [50, 50], duration: 0.7 });
 
           var minutes = Math.max(1, Math.round(meters / WALK_SPEED / 60));
-          // El resumen (minutos, metros, piso) lo muestra la app con el mensaje 'route'.
           showBanner('');
           send('route', {
             id: spaceId,
@@ -884,8 +820,6 @@
           computeRoute(spaceId, start);
           return true;
         };
-
-        // ---- Inicialización -----------------------------------------------------------------
 
         function showMessage(text) {
           var box = document.createElement('div');
@@ -931,8 +865,6 @@
           });
         }
 
-        // Fondo vectorial: el lote del campus y el contorno de cada bloque. Va en un panel propio,
-        // debajo de los espacios, y no responde a toques (salvo para marcar el inicio de un camino).
         function toLatLngs(ring) {
           return (ring || []).map(function (p) {
             return [p[1], p[0]];
@@ -1019,7 +951,7 @@
             setIdle(entry);
             layer.on('click', function (event) {
               if (picking) {
-                return; // el toque se usa para marcar el inicio del camino
+                return;
               }
               L.DomEvent.stop(event);
               window.highlightSpace(id, { center: false });
@@ -1055,7 +987,6 @@
           addFloorControl();
           addBuildingLabels();
           window.fitPlan();
-          // Los nombres de los bloques se encimarían con el mapa muy alejado.
           var labelZoom = map.getZoom() - 0.25;
           var toggleLabels = function () {
             map.getContainer().classList.toggle('hide-buildings', map.getZoom() < labelZoom);

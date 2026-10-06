@@ -15,27 +15,10 @@ import useFocusRefresh from '../../hooks/useFocusRefresh';
 import useRemoteResource from '../../hooks/useRemoteResource';
 import { ADMIN_SPACES_TABS, matchesPlanName } from '../../utils/admin.utils';
 
-/**
- * @description Consulta todos los planos. Es una referencia estable para el hook de carga.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @returns {Promise<Array>} Planos de cualquier estado
- */
 const fetchAllPlans = () => listAllPlans();
 
-/**
- * @description Texto de la cantidad de espacios dibujados en un plano.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {number} count - Espacios con polígono
- * @returns {string} Texto para la lista
- */
 const drawnLabel = (count) => (count === 1 ? '1 espacio ubicado' : `${count} espacios ubicados`);
 
-/**
- * @description Explica qué pasa al eliminar un plano, para la primera verificación.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} plan - Plano a eliminar
- * @returns {string} Advertencia
- */
 const deleteWarning = (plan) => {
   const count = plan.espaciosDibujados || 0;
   const spaces =
@@ -46,23 +29,10 @@ const deleteWarning = (plan) => {
   return `"${plan.nombre}" se borrará definitivamente con su imagen. ${spaces}${route} Esta acción no se puede deshacer. Si solo quieres ocultarlo, usa "Desactivar".`;
 };
 
-/**
- * @description Pantalla de gestión de planos del campus. Lista los planos, activos e inactivos, y
- *              permite crearlos, editarlos, abrir el editor para dibujar los espacios, activarlos o
- *              desactivarlos (se ocultan y conservan todo) y eliminarlos definitivamente. Eliminar
- *              pide dos verificaciones: primero confirmar las consecuencias y después escribir el
- *              nombre del plano; el backend vuelve a comprobar ese nombre.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.flash trae el mensaje del formulario
- * @returns {React.JSX.Element} Pantalla de planos
- */
 const PlansManagementScreen = ({ navigation, route }) => {
   const actions = useAdminActions();
   const [flash, setFlash] = useFlash(route, navigation, actions.clear);
   const list = useRemoteResource(fetchAllPlans, []);
-  // Eliminación en dos pasos: step 1 = consecuencias, step 2 = escribir el nombre del plano.
   const [deletion, setDeletion] = useState(null);
   const [typedName, setTypedName] = useState('');
   useFocusRefresh(list.refresh);

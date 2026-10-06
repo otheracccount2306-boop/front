@@ -5,18 +5,6 @@ import colors from '../../theme/colors';
 import { fontSizes, radius, spacing } from '../../theme/typography';
 import AppIcon from '../common/AppIcon';
 
-/**
- * @description Lista de opciones del menú administrativo con el cierre de sesión al pie. La usan
- *              tanto el menú lateral de la versión web como el cajón de la versión móvil.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string|null} props.active - Nombre de la pestaña activa
- * @param {Function} props.onSelect - Recibe el ítem del menú elegido
- * @param {Function} props.onLogout - Se ejecuta al pulsar Cerrar sesión
- * @returns {React.JSX.Element} Menú administrativo
- */
 const AdminMenu = ({ active, onSelect, onLogout }) => (
   <View style={styles.container}>
     <View>

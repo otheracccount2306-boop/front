@@ -43,14 +43,6 @@ const COUNTERS = {
   },
 };
 
-/**
- * @description Pantalla inicial del panel administrativo. Muestra seis contadores (usuarios activos,
- *              noticias publicadas, eventos activos, servicios activos, espacios registrados y
- *              asignaturas del periodo actual) consultados en paralelo con Promise.all. Si un contador
- *              falla muestra "—" sin afectar a los demás. Incluye cierre de sesión con confirmación.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @returns {React.JSX.Element} Dashboard administrativo
- */
 const AdminDashboardScreen = () => {
   const { user } = useAuth();
   const logout = useAdminLogout();

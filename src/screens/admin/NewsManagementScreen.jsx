@@ -22,13 +22,6 @@ const STATUS_CHIPS = [
   { value: 'ARCHIVADO', label: 'Archivadas' },
 ];
 
-/**
- * @description Convierte una noticia del listado en el cuerpo que espera el backend para actualizarla.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} news - Noticia completa del listado administrativo
- * @param {string} estado - Estado con el que se guardará
- * @returns {Object} Cuerpo de la solicitud de actualización
- */
 const toNewsRequest = (news, estado) => ({
   titulo: news.titulo,
   resumen: news.resumen,
@@ -38,17 +31,6 @@ const toNewsRequest = (news, estado) => ({
   estado,
 });
 
-/**
- * @description Pantalla de gestión de noticias. Lista todas las noticias, incluidos borradores y
- *              archivadas, con filtro por estado, y permite crear, editar, publicar y archivar
- *              contenido. Archivar es la eliminación lógica del backend, por eso no hay una opción
- *              "Eliminar" distinta.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.flash trae el mensaje del formulario
- * @returns {React.JSX.Element} Pantalla de gestión de noticias
- */
 const NewsManagementScreen = ({ navigation, route }) => {
   const [status, setStatus] = useState(ALL_VALUE);
   const actions = useAdminActions();

@@ -4,15 +4,6 @@ import colors from '../../theme/colors';
 import { fontSizes, spacing } from '../../theme/typography';
 import AppIcon from '../common/AppIcon';
 
-/**
- * @description Casilla obligatoria de aceptación de la política de tratamiento de datos
- *              personales (Ley 1581 de 2012).
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {boolean} props.checked - Estado de la casilla
- * @param {Function} props.onChange - Recibe el nuevo estado
- * @returns {React.JSX.Element} Casilla de política de datos
- */
 const PolicyCheckbox = ({ checked, onChange }) => (
   <Pressable
     onPress={() => onChange(!checked)}

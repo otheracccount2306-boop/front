@@ -21,14 +21,6 @@ const MODULE_TABS = [
 
 const HIGHLIGHT_DAYS = 7;
 
-/**
- * @description Pantalla del calendario académico institucional con filtro por categoría. Lista los
- *              eventos en orden cronológico y resalta los que ocurren dentro de los próximos 7 días.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de calendario
- */
 const CalendarScreen = ({ navigation }) => {
   const [category, setCategory] = useState(ALL_VALUE);
   const { events, loading, error, refresh } = useCalendar(category);

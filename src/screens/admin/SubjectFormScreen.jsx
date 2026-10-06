@@ -32,12 +32,6 @@ const EMPTY = {
   activo: true,
 };
 
-/**
- * @description Convierte una asignatura del backend en los valores del formulario.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object|undefined} subject - Asignatura a editar, o undefined al crear
- * @returns {Object} Valores iniciales del formulario
- */
 const toFormValues = (subject) =>
   subject
     ? {
@@ -53,17 +47,6 @@ const toFormValues = (subject) =>
       }
     : EMPTY;
 
-/**
- * @description Pantalla de creación y edición de asignaturas. Los días se eligen con casillas y se
- *              envían en mayúsculas y sin tildes; el código se convierte a mayúsculas al escribir; la
- *              hora de fin debe ser posterior a la de inicio. Un 409 distingue conflicto de aula y horario
- *              de código repetido.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.subject es la asignatura a editar
- * @returns {React.JSX.Element} Formulario de asignatura
- */
 const SubjectFormScreen = ({ navigation, route }) => {
   const subject = route.params ? route.params.subject : undefined;
   const initial = useMemo(() => toFormValues(subject), [subject]);

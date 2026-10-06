@@ -3,29 +3,6 @@ import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import colors from '../../theme/colors';
 import { fontSizes, radius, spacing } from '../../theme/typography';
 
-/**
- * @description Campo de formulario del panel: etiqueta superior con indicador de obligatorio,
- *              soporte multilínea, contador de caracteres opcional y mensaje de error bajo el campo.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} props.label - Etiqueta del campo
- * @param {string} props.value - Valor actual
- * @param {Function} props.onChangeText - Se ejecuta al cambiar el texto
- * @param {string} [props.error] - Mensaje de error; pinta el borde de rojo
- * @param {boolean} [props.multiline] - Permite varias líneas
- * @param {number} [props.maxLength] - Longitud máxima
- * @param {boolean} [props.showCount] - Muestra el contador de caracteres
- * @param {boolean} [props.editable] - false para mostrar el campo de solo lectura
- * @param {boolean} [props.required] - Marca el campo como obligatorio
- * @param {Function} [props.onBlur] - Se ejecuta al perder el foco
- * @param {string} [props.placeholder] - Texto de ayuda
- * @param {string} [props.keyboardType] - Tipo de teclado
- * @param {string} [props.autoCapitalize] - Política de mayúsculas automáticas
- * @param {string} [props.testID] - Identificador para pruebas
- * @returns {React.JSX.Element} Campo de formulario
- */
 const AdminFormField = ({
   label,
   value,

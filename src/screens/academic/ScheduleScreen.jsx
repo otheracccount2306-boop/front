@@ -27,27 +27,11 @@ const DAY_CHIPS = [
   { value: 'VIERNES', label: 'VIE' },
 ];
 
-/**
- * @description Devuelve el día inicial del selector: el día actual si es de lunes a viernes, y
- *              LUNES si es fin de semana.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @returns {string} Código de día
- */
 const getInitialDay = () => {
   const today = getDayCode();
   return DAY_CHIPS.some((chip) => chip.value === today) ? today : 'LUNES';
 };
 
-/**
- * @description Pantalla del horario del estudiante con selector de día de lunes a viernes. Inicia
- *              en el día actual, muestra primero el caché local y actualiza en segundo plano. Cada
- *              clase con el aula ubicada en el mapa tiene "Ver en mapa", que abre el mapa del campus
- *              con el salón iluminado.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de horario
- */
 const ScheduleScreen = ({ navigation }) => {
   const [day, setDay] = useState(getInitialDay);
   const { schedule, all, loading, error, refresh } = useSchedule(day);

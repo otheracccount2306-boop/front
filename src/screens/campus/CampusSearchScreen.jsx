@@ -13,14 +13,6 @@ import { useSpaceSearch } from '../../hooks/useSpaces';
 import { CAMPUS_MODULE_TABS } from '../../navigation/tabItems';
 import { spacing } from '../../theme/typography';
 
-/**
- * @description Pantalla de búsqueda de espacios por nombre o código. La barra de búsqueda recibe el
- *              foco al entrar, consulta el backend con debounce de 300 ms y exige al menos 2 caracteres.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de búsqueda del campus
- */
 const CampusSearchScreen = ({ navigation }) => {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null);

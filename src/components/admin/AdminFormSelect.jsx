@@ -19,24 +19,6 @@ const WEB_SELECT_STYLE = {
   color: colors.gray1,
 };
 
-/**
- * @description Selector de opciones del panel. En web usa un select HTML nativo; en móvil muestra
- *              el valor elegido y abre una lista modal. Las opciones pueden marcarse como
- *              deshabilitadas, por ejemplo para impedir volver una noticia publicada a borrador.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} props.label - Etiqueta del selector
- * @param {string} props.value - Valor elegido
- * @param {Function} props.onChange - Recibe el valor elegido
- * @param {Array<{ label: string, value: string, disabled?: boolean }>} props.options - Opciones disponibles
- * @param {string} [props.error] - Mensaje de error
- * @param {boolean} [props.required] - Marca el campo como obligatorio
- * @param {boolean} [props.disabled] - Deshabilita el selector completo
- * @param {string} [props.placeholder] - Texto cuando no hay valor elegido
- * @returns {React.JSX.Element} Selector de opciones
- */
 const AdminFormSelect = ({
   label,
   value,

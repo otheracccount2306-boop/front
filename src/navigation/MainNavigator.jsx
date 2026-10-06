@@ -30,11 +30,6 @@ const NewsStack = createNativeStackNavigator();
 
 const stackOptions = { headerShown: false };
 
-/**
- * @description Pila de la pestaña Inicio: Dashboard y Perfil.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @returns {React.JSX.Element} Pila de Inicio
- */
 const HomeNavigator = () => (
   <HomeStack.Navigator screenOptions={stackOptions}>
     <HomeStack.Screen name="Dashboard" component={DashboardScreen} />
@@ -42,11 +37,6 @@ const HomeNavigator = () => (
   </HomeStack.Navigator>
 );
 
-/**
- * @description Pila de la pestaña Académico: Horario y Calendario.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @returns {React.JSX.Element} Pila de Académico
- */
 const AcademicNavigator = () => (
   <AcademicStack.Navigator screenOptions={stackOptions}>
     <AcademicStack.Screen name="Schedule" component={ScheduleScreen} />
@@ -54,11 +44,6 @@ const AcademicNavigator = () => (
   </AcademicStack.Navigator>
 );
 
-/**
- * @description Pila de la pestaña Servicios: Bienestar, Directorio y Preguntas frecuentes.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @returns {React.JSX.Element} Pila de Servicios
- */
 const ServicesNavigator = () => (
   <ServicesStack.Navigator screenOptions={stackOptions}>
     <ServicesStack.Screen name="Wellbeing" component={WellbeingScreen} />
@@ -67,11 +52,6 @@ const ServicesNavigator = () => (
   </ServicesStack.Navigator>
 );
 
-/**
- * @description Pila de la pestaña Campus: Espacios, Búsqueda y Mapa.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @returns {React.JSX.Element} Pila de Campus
- */
 const CampusNavigator = () => (
   <CampusStack.Navigator screenOptions={stackOptions}>
     <CampusStack.Screen name="CampusSpaces" component={CampusSpacesScreen} />
@@ -80,11 +60,6 @@ const CampusNavigator = () => (
   </CampusStack.Navigator>
 );
 
-/**
- * @description Pila de la pestaña Noticias: Noticias, Detalle de noticia y Eventos.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @returns {React.JSX.Element} Pila de Noticias
- */
 const NewsNavigator = () => (
   <NewsStack.Navigator screenOptions={stackOptions}>
     <NewsStack.Screen name="News" component={NewsScreen} />
@@ -101,14 +76,6 @@ const TAB_COMPONENTS = {
   NoticiasTab: NewsNavigator,
 };
 
-/**
- * @description Navegador principal con cinco pestañas (Inicio, Académico, Servicios, Campus y
- *              Noticias). En web con ventana ancha la barra inferior se reemplaza por un menú lateral.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @returns {React.JSX.Element} Navegador de pestañas
- */
 const MainNavigator = () => {
   const { width } = useWindowDimensions();
   const useSidebar = Platform.OS === 'web' && width >= SIDEBAR_MIN_WIDTH;

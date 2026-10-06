@@ -3,15 +3,6 @@ import { Image, StyleSheet, View } from 'react-native';
 import colors from '../../theme/colors';
 import AppIcon from '../common/AppIcon';
 
-/**
- * @description Imagen de portada con carga diferida: muestra un fondo de color con un ícono
- *              mientras la imagen carga, y lo conserva si la noticia no tiene imagen o falla la carga.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string|null} props.uri - URL de la imagen
- * @param {number} props.height - Alto del contenedor
- * @returns {React.JSX.Element} Portada
- */
 const CoverImage = ({ uri, height }) => {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);

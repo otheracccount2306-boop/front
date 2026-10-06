@@ -7,15 +7,6 @@ import { formatLongDate } from '../../utils/date.utils';
 import AppBadge from '../common/AppBadge';
 import CoverImage from './CoverImage';
 
-/**
- * @description Tarjeta de una noticia con imagen de portada, categoría, título, resumen y fecha
- *              de publicación.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {Object} props.news - Noticia en formato resumido
- * @param {Function} props.onPress - Recibe la noticia al tocar la tarjeta
- * @returns {React.JSX.Element} Tarjeta de noticia
- */
 const NewsCard = ({ news, onPress }) => (
   <Pressable onPress={() => onPress(news)} style={styles.card} accessibilityRole="button">
     <CoverImage uri={news.imagenUrl} height={140} />

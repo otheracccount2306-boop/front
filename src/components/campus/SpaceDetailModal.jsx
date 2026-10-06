@@ -6,17 +6,6 @@ import { categoryLabel } from '../../utils/category.utils';
 import AppBadge from '../common/AppBadge';
 import AppButton from '../common/AppButton';
 
-/**
- * @description Modal con el detalle completo de un espacio del campus: código, categoría,
- *              edificio, piso, descripción y referencia para llegar.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {Object|null} props.space - Espacio a mostrar; si es null el modal se oculta
- * @param {Function} props.onClose - Se ejecuta al cerrar el modal
- * @param {Function} [props.onShowOnMap] - Recibe el espacio para abrirlo en el mapa; el botón solo
- *                                         aparece si el espacio está dibujado en un plano
- * @returns {React.JSX.Element} Modal de detalle
- */
 const SpaceDetailModal = ({ space, onClose, onShowOnMap }) => (
   <Modal visible={Boolean(space)} transparent animationType="fade" onRequestClose={onClose}>
     <View style={styles.overlay}>
@@ -49,14 +38,6 @@ const SpaceDetailModal = ({ space, onClose, onShowOnMap }) => (
   </Modal>
 );
 
-/**
- * @description Línea de detalle con etiqueta y valor; no se muestra si el valor está vacío.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} props.label - Etiqueta del dato
- * @param {string} [props.value] - Valor del dato
- * @returns {React.JSX.Element|null} Línea de detalle, o null si no hay valor
- */
 const DetailLine = ({ label, value }) =>
   value ? (
     <View style={styles.line}>

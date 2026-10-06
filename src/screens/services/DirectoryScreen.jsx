@@ -19,14 +19,6 @@ const MODULE_TABS = [
   { name: 'Faq', label: 'Preguntas' },
 ];
 
-/**
- * @description Pantalla del directorio institucional. Carga las dependencias una vez y filtra
- *              localmente con debounce de 300 ms, sin llamar al backend por cada carácter.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de directorio
- */
 const DirectoryScreen = ({ navigation }) => {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 300);

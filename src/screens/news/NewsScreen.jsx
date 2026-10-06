@@ -18,14 +18,6 @@ const MODULE_TABS = [
   { name: 'Events', label: 'Eventos' },
 ];
 
-/**
- * @description Pantalla de noticias institucionales con filtro por categoría y scroll infinito de
- *              10 en 10. Al tocar una noticia abre su detalle.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de noticias
- */
 const NewsScreen = ({ navigation }) => {
   const [category, setCategory] = useState(ALL_VALUE);
   const { items, loading, refreshing, loadingMore, error, loadMore, refresh } = useNews(category);

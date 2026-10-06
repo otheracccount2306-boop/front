@@ -6,30 +6,6 @@ import AppLoader from '../common/AppLoader';
 import EmptyState from '../common/EmptyState';
 import ErrorBanner from '../common/ErrorBanner';
 
-/**
- * @description Cuerpo estándar de las pantallas de gestión: muestra el mensaje de confirmación, el
- *              error de carga con reintento, el indicador de carga, la lista con recarga por
- *              deslizamiento y el estado vacío. Deja espacio inferior para el botón flotante.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {Array} props.data - Elementos a mostrar
- * @param {Function} props.keyExtractor - Devuelve la clave única de un elemento
- * @param {Function} props.renderItem - Renderiza un elemento con la firma de FlatList
- * @param {boolean} props.loading - Muestra el indicador de carga inicial
- * @param {string|null} [props.error] - Error de carga
- * @param {Function} [props.onRetry] - Reintenta la carga
- * @param {string|null} [props.success] - Mensaje de confirmación de la última acción
- * @param {string|null} [props.failure] - Mensaje de error de la última acción
- * @param {boolean} [props.refreshing] - Estado de la recarga por deslizamiento
- * @param {Function} [props.onRefresh] - Recarga por deslizamiento
- * @param {string} props.emptyMessage - Mensaje del estado vacío
- * @param {string} [props.emptyIcon] - Ícono del estado vacío
- * @param {React.ReactNode} [props.footer] - Contenido al final de la lista
- * @param {Function} [props.onEndReached] - Se ejecuta al llegar al final de la lista
- * @returns {React.JSX.Element} Cuerpo de listado
- */
 const AdminListView = ({
   data,
   keyExtractor,

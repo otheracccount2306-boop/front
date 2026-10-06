@@ -5,15 +5,6 @@ const TECHNICAL_MESSAGES = [
   'Not Found',
 ];
 
-/**
- * @description Extrae el mensaje que envió el backend. Acepta el formato { message } que
- *              devuelve la API y el formato alterno { error } descrito en la documentación.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} error - Error de Axios
- * @returns {string|null} Mensaje del servidor o null si no viene ninguno
- */
 export const extractServerMessage = (error) => {
   const body = error && error.response ? error.response.data : null;
   if (!body) {
@@ -25,16 +16,6 @@ export const extractServerMessage = (error) => {
   return typeof body.error === 'string' && body.error ? body.error : null;
 };
 
-/**
- * @description Traduce un error de red o de la API a un mensaje amigable en español, sin
- *              detalles técnicos. Los mensajes de negocio del backend (400 y 422) se conservan.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} error - Error de Axios o error ya traducido
- * @param {Object} overrides - Mensajes específicos por código HTTP, por ejemplo { 409: 'El correo ya está registrado' }
- * @returns {string} Mensaje para mostrar al usuario
- */
 export const getErrorMessage = (error, overrides = {}) => {
   if (error && error.isFriendly) {
     return error.message;
@@ -73,16 +54,6 @@ export const getErrorMessage = (error, overrides = {}) => {
   }
 };
 
-/**
- * @description Convierte un error de Axios en un Error con mensaje amigable y el código HTTP,
- *              listo para que las pantallas lo muestren sin volver a interpretarlo.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} error - Error de Axios
- * @param {Object} overrides - Mensajes específicos por código HTTP
- * @returns {Error} Error con propiedades message, status e isFriendly
- */
 export const toFriendlyError = (error, overrides = {}) => {
   const friendly = new Error(getErrorMessage(error, overrides));
   friendly.status = error && error.response ? error.response.status : null;

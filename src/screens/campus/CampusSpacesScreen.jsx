@@ -15,14 +15,6 @@ import { CAMPUS_MODULE_TABS } from '../../navigation/tabItems';
 import { spacing } from '../../theme/typography';
 import { ALL_VALUE, SPACE_CHIPS } from '../../utils/category.utils';
 
-/**
- * @description Pantalla del catálogo de espacios del campus con filtro por categoría. Al tocar una
- *              tarjeta abre un modal con el detalle del espacio. Usa caché local.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de espacios del campus
- */
 const CampusSpacesScreen = ({ navigation }) => {
   const [category, setCategory] = useState(ALL_VALUE);
   const [selected, setSelected] = useState(null);

@@ -22,17 +22,6 @@ const STATUS_CHIPS = [
   { value: 'CANCELADO', label: 'Cancelados' },
 ];
 
-/**
- * @description Pantalla de gestión de eventos institucionales. Lista todos los eventos con filtro por
- *              estado y permite crear, editar y cancelar. Los eventos concluidos no se modifican ni se
- *              borran. Cancelar es la eliminación lógica del backend, por eso no hay una opción
- *              "Eliminar" distinta.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.flash trae el mensaje del formulario
- * @returns {React.JSX.Element} Pantalla de gestión de eventos
- */
 const EventsManagementScreen = ({ navigation, route }) => {
   const [status, setStatus] = useState(ALL_VALUE);
   const actions = useAdminActions();

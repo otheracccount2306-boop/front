@@ -4,16 +4,6 @@ import colors from '../../theme/colors';
 import { cardShadow, spacing } from '../../theme/typography';
 import AppIcon from '../common/AppIcon';
 
-/**
- * @description Botón flotante "+" para crear un nuevo registro desde un listado del panel.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {Function} props.onPress - Se ejecuta al tocar el botón
- * @param {string} props.label - Descripción accesible, por ejemplo "Crear noticia"
- * @returns {React.JSX.Element} Botón flotante
- */
 const AdminFab = ({ onPress, label }) => (
   <Pressable
     onPress={onPress}

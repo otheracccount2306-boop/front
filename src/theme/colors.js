@@ -1,10 +1,3 @@
-/**
- * @description Paleta oficial UCC. Es la única fuente de colores de la aplicación:
- *              ningún otro archivo debe definir colores propios.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- */
 const colors = {
   primary: '#007760',
   primaryDark: '#005A47',
@@ -29,15 +22,6 @@ const colors = {
 
 const CATEGORY_PALETTE = [colors.primary, colors.aqua, colors.light, colors.accent, colors.primaryDark];
 
-/**
- * @description Asigna un color de la paleta UCC a una categoría o código de forma
- *              determinista, para que el mismo valor siempre use el mismo color.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {string} value - Categoría, código o texto cualquiera
- * @returns {string} Color hexadecimal de la paleta
- */
 export const getCategoryColor = (value) => {
   const text = String(value || '');
   let hash = 0;

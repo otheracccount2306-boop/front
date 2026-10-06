@@ -22,13 +22,6 @@ const FILTERS = [
 
 const WIDE_LAYOUT = 900;
 
-/**
- * @description Convierte los espacios de un plano en el mapa de polígonos que dibuja el editor.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Array} spaces - Espacios del catálogo
- * @param {string} planId - Plano abierto
- * @returns {Object<string, {geometria: Object, codigo: string}>} Polígonos por UUID
- */
 const shapesOf = (spaces, planId) =>
   Object.fromEntries(
     spaces
@@ -36,14 +29,6 @@ const shapesOf = (spaces, planId) =>
       .map((space) => [space.id, { geometria: space.geometria, codigo: space.codigo }]),
   );
 
-/**
- * @description Descarga en el navegador los polígonos del plano como un FeatureCollection GeoJSON.
- *              Sirve como respaldo; la API ya los tiene guardados.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} plan - Plano abierto
- * @param {Array} spaces - Espacios dibujados en el plano
- * @returns {void}
- */
 const downloadGeoJson = (plan, spaces) => {
   const collection = {
     type: 'FeatureCollection',
@@ -64,17 +49,6 @@ const downloadGeoJson = (plan, spaces) => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
-/**
- * @description Editor visual de un plano. A la izquierda el plano con Leaflet.draw; a la derecha la
- *              lista de espacios del catálogo. El administrador elige un espacio, lo dibuja con el
- *              ratón y el polígono (GeoJSON) se guarda solo en la API; también puede mover vértices o
- *              quitar espacios del plano. No hay botón "Guardar": cada cambio se envía al terminarlo.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.planId es el plano a editar
- * @returns {React.JSX.Element} Editor del plano
- */
 const PlanEditorScreen = ({ navigation, route }) => {
   const planId = route.params.planId;
   const { width } = useWindowDimensions();
@@ -103,8 +77,6 @@ const PlanEditorScreen = ({ navigation, route }) => {
     load();
   }, [load]);
 
-  // En el mapa del campus los salones de todos los pisos comparten el plano: se filtran por piso
-  // para que no se encimen al dibujar.
   const floors = useMemo(() => {
     const set = new Set(spaces.filter((space) => space.planoId === planId && space.piso).map((space) => space.piso));
     return [...set].sort((a, b) => (parseFloat(a) || 0) - (parseFloat(b) || 0) || a.localeCompare(b));
@@ -134,20 +106,12 @@ const PlanEditorScreen = ({ navigation, route }) => {
         }
         return true;
       }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [spaces, filter, query, planId, floor],
   );
 
   const replaceSpace = (updated) =>
     setSpaces((previous) => previous.map((space) => (space.id === updated.id ? { ...space, ...updated } : space)));
 
-  /**
-   * @description Ejecuta una o varias escrituras en la API mostrando el estado del autoguardado.
-   * @author Diego Luna <diego.luna@campusucc.edu.co>
-   * @param {Function} task - Función asíncrona que guarda y devuelve los espacios actualizados
-   * @param {string} done - Mensaje al terminar
-   * @returns {Promise<boolean>} true si se guardó
-   */
   const persist = async (task, done) => {
     setStatus({ kind: 'saving', message: 'Guardando…' });
     try {
@@ -157,7 +121,6 @@ const PlanEditorScreen = ({ navigation, route }) => {
       return true;
     } catch (error) {
       setStatus({ kind: 'error', message: getAdminErrorMessage(error) });
-      // Se recarga para que el lienzo vuelva a mostrar lo que realmente quedó guardado.
       load();
       return false;
     }
@@ -177,7 +140,6 @@ const PlanEditorScreen = ({ navigation, route }) => {
         : `${target.codigo} quedó ${replaced ? 'actualizado' : 'ubicado'}.`,
     );
     if (saved && filter === 'PENDING') {
-      // Avanza al siguiente espacio sin ubicar para dibujar en serie.
       const next = visible.find((space) => space.id !== target.id);
       setSelectedId(next ? next.id : null);
     }
@@ -334,7 +296,6 @@ const PlanEditorScreen = ({ navigation, route }) => {
     >
       <View style={[styles.body, wide ? styles.bodyWide : styles.bodyNarrow]}>
         <View style={styles.canvas}>
-          {/* Siempre visible para que el lienzo no salte al elegir un espacio. */}
           <View style={[styles.selectionBar, !selected && styles.selectionBarIdle]}>
             <Text style={styles.selectionText} numberOfLines={1}>
               {selected

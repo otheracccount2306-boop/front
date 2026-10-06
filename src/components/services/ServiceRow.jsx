@@ -9,15 +9,6 @@ import AppBadge from '../common/AppBadge';
 import AppCard from '../common/AppCard';
 import AppIcon from '../common/AppIcon';
 
-/**
- * @description Fila de un servicio de bienestar o de una dependencia del directorio, con ícono de
- *              categoría, ubicación, horario, badge Abierto/Cerrado según la hora del dispositivo
- *              y enlace de contacto (marcador o cliente de correo).
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {Object} props.service - Servicio o dependencia
- * @returns {React.JSX.Element} Fila de servicio
- */
 const ServiceRow = ({ service }) => {
   const open = isOpenNow(service.horario);
   const contact = getContactAction(service.contacto);

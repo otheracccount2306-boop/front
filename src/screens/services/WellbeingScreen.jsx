@@ -19,14 +19,6 @@ const MODULE_TABS = [
   { name: 'Faq', label: 'Preguntas' },
 ];
 
-/**
- * @description Pantalla de servicios de bienestar con filtro por categoría. Cada servicio muestra su
- *              ubicación, horario, si está abierto o cerrado según la hora del dispositivo y su contacto.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de bienestar
- */
 const WellbeingScreen = ({ navigation }) => {
   const [category, setCategory] = useState(ALL_VALUE);
   const { services, loading, error, refresh } = useServices(category);

@@ -8,15 +8,6 @@ import { isInstitutionalEmail } from '../../utils/validation.utils';
 
 const RESEND_SECONDS = 60;
 
-/**
- * @description Pantalla de recuperación de contraseña. Siempre muestra el mismo mensaje de
- *              confirmación para no revelar si el correo existe y bloquea el reenvío durante 60
- *              segundos después del primer envío.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de recuperación de contraseña
- */
 const ForgotPasswordScreen = ({ navigation }) => {
   const { requestRecovery } = useAuth();
   const [correo, setCorreo] = useState('');

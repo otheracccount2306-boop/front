@@ -30,22 +30,8 @@ const CATEGORY_CHIPS = [
   { value: 'EVENTOS_ESPECIALES', label: 'Eventos' },
 ];
 
-/**
- * @description Consulta todos los eventos del calendario sin filtros; la categoría se filtra en el
- *              dispositivo. Es una referencia estable para el hook de carga.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @returns {Promise<Array>} Eventos del calendario
- */
 const fetchAllCalendar = () => listCalendarEvents();
 
-/**
- * @description Pantalla de gestión del calendario académico institucional. Lista los eventos con
- *              filtro por categoría y permite crear, editar y eliminar mediante un formulario en modal.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de gestión del calendario
- */
 const CalendarManagementScreen = ({ navigation }) => {
   const [category, setCategory] = useState(ALL_VALUE);
   const list = useRemoteResource(fetchAllCalendar, []);

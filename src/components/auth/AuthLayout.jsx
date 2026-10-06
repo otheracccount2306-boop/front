@@ -5,17 +5,6 @@ import colors from '../../theme/colors';
 import { fontSizes, spacing } from '../../theme/typography';
 import AppIcon from '../common/AppIcon';
 
-/**
- * @description Estructura común de las pantallas de autenticación: banner superior con la marca
- *              UCC, título y subtítulo, y un cuerpo centrado con ancho máximo para el formulario.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} props.title - Título de la pantalla
- * @param {string} [props.subtitle] - Texto secundario bajo el título
- * @param {Function} [props.onBack] - Si se envía, muestra la flecha de retroceso
- * @param {React.ReactNode} props.children - Formulario de la pantalla
- * @returns {React.JSX.Element} Estructura de pantalla de autenticación
- */
 const AuthLayout = ({ title, subtitle, onBack, children }) => {
   const insets = useSafeAreaInsets();
 

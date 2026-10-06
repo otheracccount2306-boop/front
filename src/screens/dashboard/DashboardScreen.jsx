@@ -20,27 +20,11 @@ import { getErrorMessage } from '../../utils/error.utils';
 const QUICK_ACCESS = TAB_ITEMS.filter((item) => item.name !== 'InicioTab');
 const IDLE = { data: null, error: null, loading: true };
 
-/**
- * @description Ejecuta una solicitud y devuelve siempre un resultado { data, error } sin lanzar,
- *              para que la falla de un módulo no impida mostrar los demás.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @param {Promise} request - Solicitud a ejecutar
- * @returns {Promise<{ data: any, error: string|null, loading: boolean }>} Resultado aislado de la solicitud
- */
 const isolate = (request) =>
   request
     .then((data) => ({ data, error: null, loading: false }))
     .catch((error) => ({ data: null, error: getErrorMessage(error), loading: false }));
 
-/**
- * @description Pantalla de inicio. Muestra un saludo, acceso rápido a los cuatro módulos, la próxima
- *              clase de hoy, el próximo evento y la última noticia. Consulta los tres endpoints en
- *              paralelo con Promise.all y aísla los errores por tarjeta.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de inicio
- */
 const DashboardScreen = ({ navigation }) => {
   const { user } = useAuth();
   const [schedule, setSchedule] = useState(IDLE);

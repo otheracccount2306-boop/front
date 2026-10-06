@@ -9,18 +9,6 @@ const VARIANTS = {
   info: { background: colors.accentLight, border: colors.accent, text: colors.gray1 },
 };
 
-/**
- * @description Franja de mensaje con borde izquierdo de color. Se usa para errores (rojo),
- *              confirmaciones (verde) y avisos (naranja).
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} props.message - Mensaje a mostrar
- * @param {'error'|'success'|'info'} [props.variant] - Variante visual, error por defecto
- * @param {Function} [props.onRetry] - Si se envía, muestra el enlace "Reintentar"
- * @returns {React.JSX.Element|null} Franja de mensaje, o null si no hay mensaje
- */
 const ErrorBanner = ({ message, variant = 'error', onRetry }) => {
   if (!message) {
     return null;

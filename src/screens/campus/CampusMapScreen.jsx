@@ -19,19 +19,6 @@ import { ALL_VALUE, categoryLabel } from '../../utils/category.utils';
 
 const TAP_START = 'tap';
 
-/**
- * @description Pantalla del mapa del campus. Hay un solo mapa con todos los bloques: el estudiante
- *              busca un salón por nombre o código (búsqueda local, funciona sin conexión), la app
- *              envía su UUID al mapa, que cambia al piso del salón, lo ilumina y centra la vista.
- *              Con "Cómo llegar" el mapa dibuja el camino desde una entrada del campus o desde el
- *              punto que el estudiante toque. Acepta route.params.spaceId para abrir el mapa ya
- *              enfocado en un espacio (por ejemplo, desde el detalle de un espacio).
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.spaceId es el espacio a mostrar
- * @returns {React.JSX.Element} Pantalla del mapa
- */
 const CampusMapScreen = ({ navigation, route }) => {
   const requestedId = route.params ? route.params.spaceId : undefined;
   const { plans, loading: plansLoading, error: plansError, refresh } = usePlans();
@@ -58,12 +45,6 @@ const CampusMapScreen = ({ navigation, route }) => {
   const entradas = mapInfo.entradas || [];
   const startOptions = [...entradas, { id: TAP_START, nombre: 'Tocar el mapa' }];
 
-  /**
-   * @description Enfoca un espacio en el mapa y limpia el camino anterior.
-   * @author Diego Luna <diego.luna@campusucc.edu.co>
-   * @param {Object} space - Espacio con geometría
-   * @returns {void}
-   */
   const focusSpace = (space) => {
     setNotice(null);
     setRouteInfo(null);
@@ -86,7 +67,6 @@ const CampusMapScreen = ({ navigation, route }) => {
       focusSpace(spacesById.get(requestedId));
       navigation.setParams({ spaceId: undefined });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestedId, spacesById]);
 
   const choose = (space) => {
@@ -95,12 +75,6 @@ const CampusMapScreen = ({ navigation, route }) => {
     focusSpace(space);
   };
 
-  /**
-   * @description Pide al mapa el camino hasta el espacio elegido desde el punto de partida indicado.
-   * @author Diego Luna <diego.luna@campusucc.edu.co>
-   * @param {string} startId - Id de una entrada del campus o 'tap'
-   * @returns {void}
-   */
   const requestRoute = (startId) => {
     if (!selected || !mapRef.current) {
       return;

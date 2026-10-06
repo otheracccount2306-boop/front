@@ -26,12 +26,6 @@ const EMPTY = {
   activo: true,
 };
 
-/**
- * @description Convierte un recurso del backend en los valores del formulario.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object|undefined} service - Recurso a editar, o undefined al crear
- * @returns {Object} Valores iniciales del formulario
- */
 const toFormValues = (service) =>
   service
     ? {
@@ -47,16 +41,6 @@ const toFormValues = (service) =>
       }
     : EMPTY;
 
-/**
- * @description Pantalla de creación y edición de servicios de bienestar, dependencias del directorio
- *              y preguntas frecuentes. Recibe type (wellbeing, department o faq) y, al editar, el
- *              registro. Incluye el interruptor de activo. Pide confirmación al salir con cambios.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.type y route.params.service
- * @returns {React.JSX.Element} Formulario de servicio
- */
 const ServiceFormScreen = ({ navigation, route }) => {
   const { type, service } = route.params;
   const typeInfo = SERVICE_TYPES.find((item) => item.name === type);

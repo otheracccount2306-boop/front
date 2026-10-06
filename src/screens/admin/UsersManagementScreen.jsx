@@ -18,14 +18,6 @@ import { useDebouncedValue } from '../../utils/debounce.utils';
 
 const ROLE_LABELS = { ESTUDIANTE: 'Estudiante', ADMINISTRADOR: 'Administrador' };
 
-/**
- * @description Pantalla de gestión de usuarios. Lista paginada con búsqueda (debounce de 300 ms) por
- *              nombre, correo o programa. Permite activar o desactivar cuentas, cambiar el rol y
- *              eliminar definitivamente (Ley 1581), con confirmación. El administrador no tiene
- *              acciones sobre su propia cuenta.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @returns {React.JSX.Element} Pantalla de gestión de usuarios
- */
 const UsersManagementScreen = () => {
   const { user: me } = useAuth();
   const [search, setSearch] = useState('');

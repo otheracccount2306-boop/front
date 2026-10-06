@@ -32,22 +32,12 @@ const UsersStack = createNativeStackNavigator();
 
 const stackOptions = { headerShown: false };
 
-/**
- * @description Pila de la sección Dashboard.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @returns {React.JSX.Element} Pila del dashboard
- */
 const DashboardNavigator = () => (
   <DashboardStack.Navigator screenOptions={stackOptions}>
     <DashboardStack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
   </DashboardStack.Navigator>
 );
 
-/**
- * @description Pila de la sección Noticias: listado y formulario.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @returns {React.JSX.Element} Pila de noticias
- */
 const NewsNavigator = () => (
   <NewsStack.Navigator screenOptions={stackOptions}>
     <NewsStack.Screen name="NewsManagement" component={NewsManagementScreen} />
@@ -55,11 +45,6 @@ const NewsNavigator = () => (
   </NewsStack.Navigator>
 );
 
-/**
- * @description Pila de la sección Eventos: listado y formulario.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @returns {React.JSX.Element} Pila de eventos
- */
 const EventsNavigator = () => (
   <EventsStack.Navigator screenOptions={stackOptions}>
     <EventsStack.Screen name="EventsManagement" component={EventsManagementScreen} />
@@ -67,11 +52,6 @@ const EventsNavigator = () => (
   </EventsStack.Navigator>
 );
 
-/**
- * @description Pila de la sección Servicios: listado con pestañas y formulario.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @returns {React.JSX.Element} Pila de servicios
- */
 const ServicesNavigator = () => (
   <ServicesStack.Navigator screenOptions={stackOptions}>
     <ServicesStack.Screen name="ServicesManagement" component={ServicesManagementScreen} />
@@ -79,11 +59,6 @@ const ServicesNavigator = () => (
   </ServicesStack.Navigator>
 );
 
-/**
- * @description Pila de la sección Espacios: catálogo, formulario, planos y editor del mapa.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @returns {React.JSX.Element} Pila de espacios
- */
 const SpacesNavigator = () => (
   <SpacesStack.Navigator screenOptions={stackOptions}>
     <SpacesStack.Screen name="SpacesManagement" component={SpacesManagementScreen} />
@@ -94,11 +69,6 @@ const SpacesNavigator = () => (
   </SpacesStack.Navigator>
 );
 
-/**
- * @description Pila de la sección Académico: asignaturas, formulario de asignatura y calendario.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @returns {React.JSX.Element} Pila académica
- */
 const AcademicNavigator = () => (
   <AcademicStack.Navigator screenOptions={stackOptions}>
     <AcademicStack.Screen name="SubjectsManagement" component={SubjectsManagementScreen} />
@@ -107,24 +77,12 @@ const AcademicNavigator = () => (
   </AcademicStack.Navigator>
 );
 
-/**
- * @description Pila de la sección Usuarios.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @returns {React.JSX.Element} Pila de usuarios
- */
 const UsersNavigator = () => (
   <UsersStack.Navigator screenOptions={stackOptions}>
     <UsersStack.Screen name="UsersManagement" component={UsersManagementScreen} />
   </UsersStack.Navigator>
 );
 
-/**
- * @description Navegador del administrador. En web con ventana de 900 puntos o más muestra un menú
- *              lateral fijo; en móvil no hay barra de pestañas y el menú se abre desde la hamburguesa
- *              del encabezado de cada pantalla.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @returns {React.JSX.Element} Navegador del panel administrativo
- */
 const AdminNavigator = () => {
   const { width } = useWindowDimensions();
   const useSidebar = Platform.OS === 'web' && width >= SIDEBAR_MIN_WIDTH;

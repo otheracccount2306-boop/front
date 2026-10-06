@@ -16,12 +16,6 @@ import { isValidPhone } from '../../utils/validation.utils';
 const EDITABLE_FIELDS = ['nombre', 'apellido', 'programaAcademico', 'telefono'];
 const ROLE_LABELS = { ESTUDIANTE: 'Estudiante', ADMINISTRADOR: 'Administrador' };
 
-/**
- * @description Construye los valores iniciales del formulario de perfil a partir del usuario.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @param {Object|null} user - Perfil del usuario
- * @returns {{ nombre: string, apellido: string, programaAcademico: string, telefono: string }} Valores del formulario
- */
 const toFormValues = (user) => ({
   nombre: (user && user.nombre) || '',
   apellido: (user && user.apellido) || '',
@@ -29,15 +23,6 @@ const toFormValues = (user) => ({
   telefono: (user && user.telefono) || '',
 });
 
-/**
- * @description Pantalla de perfil. Permite editar nombre, apellido, programa y teléfono; el correo y
- *              el rol son de solo lectura. El botón Guardar solo se activa si hay cambios válidos y
- *              el cierre de sesión pide confirmación.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de perfil
- */
 const ProfileScreen = ({ navigation }) => {
   const { user, loadProfile, saveProfile, logout } = useAuth();
   const initial = useMemo(() => toFormValues(user), [user]);

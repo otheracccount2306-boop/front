@@ -24,12 +24,6 @@ const EMPTY = {
   activo: true,
 };
 
-/**
- * @description Convierte un espacio del backend en los valores del formulario.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object|undefined} space - Espacio a editar, o undefined al crear
- * @returns {Object} Valores iniciales del formulario
- */
 const toFormValues = (space) =>
   space
     ? {
@@ -44,16 +38,6 @@ const toFormValues = (space) =>
       }
     : EMPTY;
 
-/**
- * @description Pantalla de creación y edición de espacios del campus. El código se convierte a
- *              mayúsculas mientras se escribe. Un código repetido muestra "El código ya existe, usa
- *              otro diferente". Pide confirmación al salir con cambios sin guardar.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.space es el espacio a editar
- * @returns {React.JSX.Element} Formulario de espacio
- */
 const SpaceFormScreen = ({ navigation, route }) => {
   const space = route.params ? route.params.space : undefined;
   const initial = useMemo(() => toFormValues(space), [space]);

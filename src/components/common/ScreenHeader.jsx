@@ -5,19 +5,6 @@ import colors from '../../theme/colors';
 import { fontSizes, spacing } from '../../theme/typography';
 import AppIcon from './AppIcon';
 
-/**
- * @description Encabezado de pantalla con fondo primario, título en negrita y respeto del área
- *              segura superior. Opcionalmente incluye botón de retroceso y un elemento a la derecha.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} props.title - Título de la pantalla
- * @param {string} [props.subtitle] - Texto secundario bajo el título
- * @param {Function} [props.onBack] - Si se envía, muestra la flecha de retroceso
- * @param {React.ReactNode} [props.right] - Elemento alineado a la derecha
- * @returns {React.JSX.Element} Encabezado
- */
 const ScreenHeader = ({ title, subtitle, onBack, right }) => {
   const insets = useSafeAreaInsets();
 

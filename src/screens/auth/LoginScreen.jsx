@@ -10,16 +10,6 @@ import { fontSizes, spacing } from '../../theme/typography';
 import { clearLoginLock, formatRemaining, getLoginLock, registerFailedAttempt } from '../../utils/loginLock.utils';
 import { isInstitutionalEmail } from '../../utils/validation.utils';
 
-/**
- * @description Pantalla de inicio de sesión. Valida credenciales contra la API y almacena los
- *              tokens JWT en AsyncStorage. Ante credenciales inválidas muestra un mensaje único sin
- *              indicar qué campo falló y, tras 5 fallos seguidos, muestra el bloqueo con cuenta regresiva.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.registered indica que se acaba de crear la cuenta
- * @returns {React.JSX.Element} Pantalla de inicio de sesión
- */
 const LoginScreen = ({ navigation, route }) => {
   const { login, sessionExpired } = useAuth();
   const [correo, setCorreo] = useState('');

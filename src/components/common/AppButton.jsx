@@ -10,21 +10,6 @@ const VARIANTS = {
   danger: { background: colors.error, border: colors.error, text: colors.white },
 };
 
-/**
- * @description Botón con tres variantes visuales. Muestra un indicador de carga y se bloquea
- *              mientras loading sea true.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {string} props.label - Texto del botón
- * @param {Function} props.onPress - Acción al presionar
- * @param {'primary'|'outline'|'danger'} [props.variant] - Variante visual
- * @param {boolean} [props.disabled] - Deshabilita el botón
- * @param {boolean} [props.loading] - Muestra el indicador de carga
- * @param {Object} [props.style] - Estilos adicionales
- * @returns {React.JSX.Element} Botón
- */
 const AppButton = ({ label, onPress, variant = 'primary', disabled = false, loading = false, style }) => {
   const palette = VARIANTS[variant] || VARIANTS.primary;
   const blocked = disabled || loading;

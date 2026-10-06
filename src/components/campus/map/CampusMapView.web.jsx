@@ -3,15 +3,6 @@ import { StyleSheet, View } from 'react-native';
 import colors from '../../../theme/colors';
 import { APP_MESSAGE_SOURCE, buildMapHtml, parseMapMessage } from './buildMapHtml';
 
-/**
- * @description Versión web de CampusMapView: react-native-webview no funciona en el navegador, así que
- *              el mismo HTML del mapa se muestra en un iframe (srcdoc) y la app le envía el UUID con
- *              postMessage. Tiene la misma interfaz que la versión móvil.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente (ver CampusMapView.jsx)
- * @param {React.Ref} ref - Expone highlight(uuid), clear() y fit()
- * @returns {React.JSX.Element} Mapa del plano
- */
 const CampusMapView = forwardRef(
   ({ plan, selectedId, onSpacePress, onNotFound, onReady, onRoute, onRouteError, onPickStart }, ref) => {
     const frameRef = useRef(null);

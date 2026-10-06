@@ -3,18 +3,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import colors from '../../theme/colors';
 import { fontSizes, spacing } from '../../theme/typography';
 
-/**
- * @description Pestañas horizontales para moverse entre las pantallas hermanas de un mismo módulo,
- *              por ejemplo Horario y Calendario.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {Array<{ name: string, label: string }>} props.items - Pantallas del módulo
- * @param {string} props.current - Nombre de la pantalla activa
- * @param {Function} props.onChange - Recibe el nombre de la pantalla elegida
- * @returns {React.JSX.Element} Pestañas
- */
 const SegmentedTabs = ({ items, current, onChange }) => (
   <View style={styles.row}>
     {items.map((item) => {

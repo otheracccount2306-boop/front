@@ -16,17 +16,6 @@ import { NEWS_CATEGORY_OPTIONS, emptyToNull, getAdminErrorMessage, isValidHttpUr
 
 const EMPTY = { titulo: '', resumen: '', contenido: '', categoria: '', imagenUrl: '', estado: 'BORRADOR' };
 
-/**
- * @description Pantalla de creación y edición de noticias. Recibe newsId opcional: si viene, carga la
- *              noticia y entra en modo edición. Ofrece "Guardar borrador" y "Publicar"; una noticia ya
- *              publicada no puede volver a borrador, así que esa opción queda deshabilitada. Pide
- *              confirmación al salir con cambios sin guardar.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.newsId es el identificador a editar
- * @returns {React.JSX.Element} Formulario de noticia
- */
 const NewsFormScreen = ({ navigation, route }) => {
   const newsId = route.params ? route.params.newsId : undefined;
   const [initial, setInitial] = useState(EMPTY);

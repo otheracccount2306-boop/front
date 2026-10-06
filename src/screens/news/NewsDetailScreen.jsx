@@ -14,16 +14,6 @@ import { categoryLabel } from '../../utils/category.utils';
 import { formatLongDate } from '../../utils/date.utils';
 import { getErrorMessage } from '../../utils/error.utils';
 
-/**
- * @description Pantalla de detalle de una noticia: portada, categoría, fecha de publicación y
- *              contenido completo. Incluye botón para compartir con la API nativa del dispositivo
- *              y botón de retroceso al listado.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @param {Object} props.route - Ruta actual; route.params.id es el identificador de la noticia
- * @returns {React.JSX.Element} Pantalla de detalle de noticia
- */
 const NewsDetailScreen = ({ navigation, route }) => {
   const { id } = route.params;
   const [news, setNews] = useState(null);

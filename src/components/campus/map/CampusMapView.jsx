@@ -5,25 +5,6 @@ import colors from '../../../theme/colors';
 import AppLoader from '../../common/AppLoader';
 import { buildMapHtml, parseMapMessage } from './buildMapHtml';
 
-/**
- * @description Mapa interactivo del campus en un WebView, sin conexión: Leaflet con L.CRS.Simple sobre
- *              un fondo vectorial del campus (sin el plano arquitectónico). Para iluminar un salón, la app le envía su UUID con
- *              injectJavaScript a la función global window.highlightSpace del mapa, que pinta el
- *              polígono y centra la vista. Si el mapa aún no cargó, el pedido espera a que esté listo.
- *              La versión web es CampusMapView.web.jsx (iframe), con la misma interfaz.
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {Object} props.plan - Plano completo (ancho, alto, navegación y espacios con geometría)
- * @param {string|null} [props.selectedId] - UUID del espacio a iluminar; al cambiar se envía al mapa
- * @param {Function} [props.onSpacePress] - Recibe el UUID del salón que el estudiante tocó en el mapa
- * @param {Function} [props.onNotFound] - Recibe el UUID pedido cuando no está dibujado en este plano
- * @param {Function} [props.onReady] - Recibe { floors, entradas, navegacion } cuando el mapa terminó de cargar
- * @param {Function} [props.onRoute] - Recibe el resumen del camino { distancia, minutos, piso, nombre, desde }
- * @param {Function} [props.onRouteError] - Recibe el mensaje cuando no se pudo trazar el camino
- * @param {Function} [props.onPickStart] - Se ejecuta cuando el mapa espera que el estudiante toque su ubicación
- * @param {React.Ref} ref - Expone highlight(uuid), route(uuid, inicio), clearRoute(), clear() y fit()
- * @returns {React.JSX.Element} Mapa del plano
- */
 const CampusMapView = forwardRef(
   ({ plan, selectedId, onSpacePress, onNotFound, onReady, onRoute, onRouteError, onPickStart }, ref) => {
     const webViewRef = useRef(null);
@@ -42,7 +23,6 @@ const CampusMapView = forwardRef(
           run('window.clearHighlight && window.clearHighlight()');
           return;
         }
-        // JSON.stringify deja el UUID como literal de texto seguro dentro del script inyectado.
         run(`window.highlightSpace && window.highlightSpace(${JSON.stringify(String(id))})`);
       },
       [run],
@@ -63,7 +43,6 @@ const CampusMapView = forwardRef(
       [highlight, run],
     );
 
-    // Cada vez que cambia el salón buscado se envía su UUID al mapa (si ya está listo).
     useEffect(() => {
       if (readyRef.current) {
         highlight(selectedId);

@@ -3,18 +3,6 @@ import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import colors from '../../theme/colors';
 import { fontSizes, radius, spacing } from '../../theme/typography';
 
-/**
- * @description Fila horizontal de chips de categoría. El chip activo usa el color primario con
- *              texto blanco y los inactivos un fondo gris.
- * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
- * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Propiedades del componente
- * @param {Array<{ value: string, label: string }>} props.chips - Opciones disponibles
- * @param {string} props.selected - Valor del chip activo
- * @param {Function} props.onSelect - Recibe el valor del chip elegido
- * @returns {React.JSX.Element} Fila de chips
- */
 const CategoryChips = ({ chips, selected, onSelect }) => (
   <ScrollView
     horizontal

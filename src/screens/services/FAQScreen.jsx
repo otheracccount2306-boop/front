@@ -21,14 +21,6 @@ const MODULE_TABS = [
   { name: 'Faq', label: 'Preguntas' },
 ];
 
-/**
- * @description Pantalla de preguntas frecuentes con chips de categoría y barra de búsqueda
- *              combinados. Cada pregunta es un acordeón colapsado por defecto. Usa caché local.
- * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @param {Object} props - Props de navegación de React Navigation
- * @param {Object} props.navigation - Objeto de navegación
- * @returns {React.JSX.Element} Pantalla de preguntas frecuentes
- */
 const FAQScreen = ({ navigation }) => {
   const [category, setCategory] = useState(ALL_VALUE);
   const [search, setSearch] = useState('');
