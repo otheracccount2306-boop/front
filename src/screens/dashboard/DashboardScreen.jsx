@@ -1,21 +1,36 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { getSchedule } from '../../api/academic.api';
-import { getEvents, getNews } from '../../api/news.api';
-import AppIcon from '../../components/common/AppIcon';
-import ScreenContainer from '../../components/common/ScreenContainer';
-import ScreenHeader from '../../components/common/ScreenHeader';
-import DashboardCard from '../../components/dashboard/DashboardCard';
-import useAuth from '../../hooks/useAuth';
-import { TAB_ITEMS } from '../../navigation/tabItems';
-import useCacheStore from '../../store/cache.store';
-import colors from '../../theme/colors';
-import { cardShadow, fontSizes, radius, spacing } from '../../theme/typography';
-import { categoryLabel } from '../../utils/category.utils';
-import { findNextClass, formatEventDateTime, formatLongDate, formatTimeRange, getDayCode } from '../../utils/date.utils';
-import { getErrorMessage } from '../../utils/error.utils';
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { getSchedule } from "../../api/academic.api";
+import { getEvents, getNews } from "../../api/news.api";
+import ShowOnMapLink from "../../components/campus/ShowOnMapLink";
+import AppIcon from "../../components/common/AppIcon";
+import ScreenContainer from "../../components/common/ScreenContainer";
+import ScreenHeader from "../../components/common/ScreenHeader";
+import DashboardCard from "../../components/dashboard/DashboardCard";
+import useAuth from "../../hooks/useAuth";
+import { openSpaceOnMap } from "../../navigation/campusLinks";
+import { TAB_ITEMS } from "../../navigation/tabItems";
+import useCacheStore from "../../store/cache.store";
+import colors from "../../theme/colors";
+import { cardShadow, fontSizes, radius, spacing } from "../../theme/typography";
+import { categoryLabel } from "../../utils/category.utils";
+import {
+  findNextClass,
+  formatEventDateTime,
+  formatLongDate,
+  formatTimeRange,
+  getDayCode,
+} from "../../utils/date.utils";
+import { getErrorMessage } from "../../utils/error.utils";
 
-const QUICK_ACCESS = TAB_ITEMS.filter((item) => item.name !== 'InicioTab');
+const QUICK_ACCESS = TAB_ITEMS.filter((item) => item.name !== "InicioTab");
 const IDLE = { data: null, error: null, loading: true };
 
 /**
@@ -28,7 +43,11 @@ const IDLE = { data: null, error: null, loading: true };
 const isolate = (request) =>
   request
     .then((data) => ({ data, error: null, loading: false }))
-    .catch((error) => ({ data: null, error: getErrorMessage(error), loading: false }));
+    .catch((error) => ({
+      data: null,
+      error: getErrorMessage(error),
+      loading: false,
+    }));
 
 /**
  * @description Pantalla de inicio. Muestra un saludo, acceso rápido a los cuatro módulos, la próxima
@@ -71,25 +90,40 @@ const DashboardScreen = ({ navigation }) => {
   };
 
   const nextClass = schedule.data ? findNextClass(schedule.data) : null;
-  const nextEvent = events.data && events.data.content.length > 0 ? events.data.content[0] : null;
-  const lastNews = news.data && news.data.content.length > 0 ? news.data.content[0] : null;
+  const nextEvent =
+    events.data && events.data.content.length > 0
+      ? events.data.content[0]
+      : null;
+  const lastNews =
+    news.data && news.data.content.length > 0 ? news.data.content[0] : null;
 
-  let classMessage = 'No tienes más clases hoy.';
+  let classMessage = "No tienes más clases hoy.";
   if (schedule.data && schedule.data.length === 0) {
-    classMessage = 'No hay horario disponible para el periodo actual.';
-  } else if (schedule.data && !schedule.data.some((subject) => subject.dias.includes(getDayCode()))) {
-    classMessage = 'Hoy no tienes clases programadas.';
+    classMessage = "No hay horario disponible para el periodo actual.";
+  } else if (
+    schedule.data &&
+    !schedule.data.some((subject) => subject.dias.includes(getDayCode()))
+  ) {
+    classMessage = "Hoy no tienes clases programadas.";
   }
 
   return (
     <ScreenContainer
       header={
         <ScreenHeader
-          title={`Hola, ${user ? user.nombre : ''}`}
+          title={`Hola, ${user ? user.nombre : ""}`}
           subtitle="¿Qué necesitas hoy?"
           right={
-            <Pressable onPress={() => navigation.navigate('Profile')} hitSlop={10} accessibilityLabel="Mi perfil">
-              <AppIcon name="person-circle-outline" size={30} color={colors.white} />
+            <Pressable
+              onPress={() => navigation.navigate("Profile")}
+              hitSlop={10}
+              accessibilityLabel="Mi perfil"
+            >
+              <AppIcon
+                name="person-circle-outline"
+                size={30}
+                color={colors.white}
+              />
             </Pressable>
           }
         />
@@ -97,7 +131,13 @@ const DashboardScreen = ({ navigation }) => {
     >
       <ScrollView
         contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} colors={[colors.primary]} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            colors={[colors.primary]}
+          />
+        }
       >
         <View style={styles.grid}>
           {QUICK_ACCESS.map((item) => (
@@ -115,27 +155,45 @@ const DashboardScreen = ({ navigation }) => {
           ))}
         </View>
 
-        <DashboardCard title="Próxima clase hoy" icon="time-outline" loading={schedule.loading} error={schedule.error}>
+        <DashboardCard
+          title="Próxima clase hoy"
+          icon="time-outline"
+          loading={schedule.loading}
+          error={schedule.error}
+        >
           {nextClass ? (
             <View>
               <Text style={styles.primaryText}>{nextClass.nombre}</Text>
               <Text style={styles.secondaryText}>
                 {formatTimeRange(nextClass.horaInicio, nextClass.horaFin)}
-                {nextClass.aula ? ` · ${nextClass.aula}` : ''}
+                {nextClass.aula ? ` · ${nextClass.aula}` : ""}
               </Text>
+              {nextClass.espacioId ? (
+                <ShowOnMapLink
+                  onPress={() =>
+                    openSpaceOnMap(navigation, nextClass.espacioId)
+                  }
+                  style={styles.mapLink}
+                />
+              ) : null}
             </View>
           ) : (
             <Text style={styles.secondaryText}>{classMessage}</Text>
           )}
         </DashboardCard>
 
-        <DashboardCard title="Próximo evento" icon="calendar-outline" loading={events.loading} error={events.error}>
+        <DashboardCard
+          title="Próximo evento"
+          icon="calendar-outline"
+          loading={events.loading}
+          error={events.error}
+        >
           {nextEvent ? (
             <View>
               <Text style={styles.primaryText}>{nextEvent.nombre}</Text>
               <Text style={styles.secondaryText}>
                 {formatEventDateTime(nextEvent.fechaHora)}
-                {nextEvent.lugar ? ` · ${nextEvent.lugar}` : ''}
+                {nextEvent.lugar ? ` · ${nextEvent.lugar}` : ""}
               </Text>
             </View>
           ) : (
@@ -148,17 +206,28 @@ const DashboardScreen = ({ navigation }) => {
           icon="newspaper-outline"
           loading={news.loading}
           error={news.error}
-          onPress={lastNews ? () => navigation.navigate('NoticiasTab', { screen: 'NewsDetail', params: { id: lastNews.id } }) : undefined}
+          onPress={
+            lastNews
+              ? () =>
+                  navigation.navigate("NoticiasTab", {
+                    screen: "NewsDetail",
+                    params: { id: lastNews.id },
+                  })
+              : undefined
+          }
         >
           {lastNews ? (
             <View>
               <Text style={styles.primaryText}>{lastNews.titulo}</Text>
               <Text style={styles.secondaryText}>
-                {categoryLabel(lastNews.categoria)} · {formatLongDate(lastNews.publicadoEn)}
+                {categoryLabel(lastNews.categoria)} ·{" "}
+                {formatLongDate(lastNews.publicadoEn)}
               </Text>
             </View>
           ) : (
-            <Text style={styles.secondaryText}>Aún no hay noticias publicadas.</Text>
+            <Text style={styles.secondaryText}>
+              Aún no hay noticias publicadas.
+            </Text>
           )}
         </DashboardCard>
       </ScrollView>
@@ -172,13 +241,13 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xl * 2,
   },
   grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginHorizontal: -spacing.xs,
     marginBottom: spacing.md,
   },
   tile: {
-    width: '50%',
+    width: "50%",
     padding: spacing.xs,
   },
   tileCard: {
@@ -189,14 +258,17 @@ const styles = StyleSheet.create({
   },
   tileLabel: {
     fontSize: fontSizes.body,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.gray1,
     marginTop: spacing.sm,
   },
   primaryText: {
     fontSize: fontSizes.body,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.gray1,
+  },
+  mapLink: {
+    marginTop: spacing.sm,
   },
   secondaryText: {
     fontSize: fontSizes.body,

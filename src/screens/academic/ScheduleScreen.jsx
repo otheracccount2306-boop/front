@@ -1,29 +1,30 @@
-import React, { useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
-import SubjectCard from '../../components/academic/SubjectCard';
-import AppLoader from '../../components/common/AppLoader';
-import CategoryChips from '../../components/common/CategoryChips';
-import EmptyState from '../../components/common/EmptyState';
-import ErrorBanner from '../../components/common/ErrorBanner';
-import ScreenContainer from '../../components/common/ScreenContainer';
-import ScreenHeader from '../../components/common/ScreenHeader';
-import SegmentedTabs from '../../components/common/SegmentedTabs';
-import useSchedule from '../../hooks/useSchedule';
-import colors from '../../theme/colors';
-import { spacing } from '../../theme/typography';
-import { getDayCode } from '../../utils/date.utils';
+import React, { useState } from "react";
+import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
+import SubjectCard from "../../components/academic/SubjectCard";
+import AppLoader from "../../components/common/AppLoader";
+import CategoryChips from "../../components/common/CategoryChips";
+import EmptyState from "../../components/common/EmptyState";
+import ErrorBanner from "../../components/common/ErrorBanner";
+import ScreenContainer from "../../components/common/ScreenContainer";
+import ScreenHeader from "../../components/common/ScreenHeader";
+import SegmentedTabs from "../../components/common/SegmentedTabs";
+import useSchedule from "../../hooks/useSchedule";
+import { openSpaceOnMap } from "../../navigation/campusLinks";
+import colors from "../../theme/colors";
+import { spacing } from "../../theme/typography";
+import { getDayCode } from "../../utils/date.utils";
 
 const MODULE_TABS = [
-  { name: 'Schedule', label: 'Horario' },
-  { name: 'Calendar', label: 'Calendario' },
+  { name: "Schedule", label: "Horario" },
+  { name: "Calendar", label: "Calendario" },
 ];
 
 const DAY_CHIPS = [
-  { value: 'LUNES', label: 'LUN' },
-  { value: 'MARTES', label: 'MAR' },
-  { value: 'MIERCOLES', label: 'MIE' },
-  { value: 'JUEVES', label: 'JUE' },
-  { value: 'VIERNES', label: 'VIE' },
+  { value: "LUNES", label: "LUN" },
+  { value: "MARTES", label: "MAR" },
+  { value: "MIERCOLES", label: "MIE" },
+  { value: "JUEVES", label: "JUE" },
+  { value: "VIERNES", label: "VIE" },
 ];
 
 /**
@@ -34,12 +35,14 @@ const DAY_CHIPS = [
  */
 const getInitialDay = () => {
   const today = getDayCode();
-  return DAY_CHIPS.some((chip) => chip.value === today) ? today : 'LUNES';
+  return DAY_CHIPS.some((chip) => chip.value === today) ? today : "LUNES";
 };
 
 /**
  * @description Pantalla del horario del estudiante con selector de día de lunes a viernes. Inicia
- *              en el día actual, muestra primero el caché local y actualiza en segundo plano.
+ *              en el día actual, muestra primero el caché local y actualiza en segundo plano. Cada
+ *              clase con el aula ubicada en el mapa tiene "Ver en mapa", que abre el mapa del campus
+ *              con el salón iluminado.
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @param {Object} props - Props de navegación de React Navigation
  * @param {Object} props.navigation - Objeto de navegación
@@ -51,8 +54,16 @@ const ScheduleScreen = ({ navigation }) => {
   const noEnrollment = !loading && !error && all.length === 0;
 
   return (
-    <ScreenContainer header={<ScreenHeader title="Académico" subtitle="Tu horario de clases" />}>
-      <SegmentedTabs items={MODULE_TABS} current="Schedule" onChange={(name) => navigation.navigate(name)} />
+    <ScreenContainer
+      header={
+        <ScreenHeader title="Académico" subtitle="Tu horario de clases" />
+      }
+    >
+      <SegmentedTabs
+        items={MODULE_TABS}
+        current="Schedule"
+        onChange={(name) => navigation.navigate(name)}
+      />
       <CategoryChips chips={DAY_CHIPS} selected={day} onSelect={setDay} />
       {error ? (
         <View style={styles.banner}>
@@ -65,14 +76,33 @@ const ScheduleScreen = ({ navigation }) => {
         <FlatList
           data={schedule}
           keyExtractor={(subject) => subject.id}
-          renderItem={({ item }) => <SubjectCard subject={item} />}
+          renderItem={({ item }) => (
+            <SubjectCard
+              subject={item}
+              onShowOnMap={(subject) =>
+                openSpaceOnMap(navigation, subject.espacioId)
+              }
+            />
+          )}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={false} onRefresh={refresh} colors={[colors.primary]} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={false}
+              onRefresh={refresh}
+              colors={[colors.primary]}
+            />
+          }
           ListEmptyComponent={
             noEnrollment ? (
-              <EmptyState icon="school-outline" message="No hay horario disponible para el periodo actual" />
+              <EmptyState
+                icon="school-outline"
+                message="No hay horario disponible para el periodo actual"
+              />
             ) : error ? null : (
-              <EmptyState icon="cafe-outline" message="No hay clases programadas para este día" />
+              <EmptyState
+                icon="cafe-outline"
+                message="No hay clases programadas para este día"
+              />
             )
           }
         />

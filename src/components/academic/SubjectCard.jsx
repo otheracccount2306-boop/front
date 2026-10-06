@@ -1,29 +1,41 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import colors, { getCategoryColor } from '../../theme/colors';
-import { fontSizes, spacing } from '../../theme/typography';
-import { formatTimeRange } from '../../utils/date.utils';
-import AppCard from '../common/AppCard';
-import AppIcon from '../common/AppIcon';
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
+import colors, { getCategoryColor } from "../../theme/colors";
+import { fontSizes, spacing } from "../../theme/typography";
+import { formatTimeRange } from "../../utils/date.utils";
+import AppCard from "../common/AppCard";
+import AppIcon from "../common/AppIcon";
+import ShowOnMapLink from "../campus/ShowOnMapLink";
 
 /**
  * @description Tarjeta de una asignatura del horario con barra de color a la izquierda, nombre,
- *              docente, aula y franja horaria.
+ *              docente, aula y franja horaria. Si el aula está ubicada en el mapa del campus
+ *              (subject.espacioId), muestra el enlace "Ver en mapa".
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @param {Object} props - Propiedades del componente
  * @param {Object} props.subject - Asignatura del horario
+ * @param {Function} [props.onShowOnMap] - Recibe la asignatura para abrir su aula en el mapa
  * @returns {React.JSX.Element} Tarjeta de asignatura
  */
-const SubjectCard = ({ subject }) => (
+const SubjectCard = ({ subject, onShowOnMap }) => (
   <AppCard style={styles.card}>
-    <View style={[styles.bar, { backgroundColor: getCategoryColor(subject.codigo) }]} />
+    <View
+      style={[
+        styles.bar,
+        { backgroundColor: getCategoryColor(subject.codigo) },
+      ]}
+    />
     <View style={styles.content}>
       <Text style={styles.name}>{subject.nombre}</Text>
-      {subject.docente ? <Text style={styles.teacher}>{subject.docente}</Text> : null}
+      {subject.docente ? (
+        <Text style={styles.teacher}>{subject.docente}</Text>
+      ) : null}
       <View style={styles.metaRow}>
         <View style={styles.meta}>
           <AppIcon name="time-outline" size={14} color={colors.gray2} />
-          <Text style={styles.metaText}>{formatTimeRange(subject.horaInicio, subject.horaFin)}</Text>
+          <Text style={styles.metaText}>
+            {formatTimeRange(subject.horaInicio, subject.horaFin)}
+          </Text>
         </View>
         {subject.aula ? (
           <View style={styles.meta}>
@@ -32,15 +44,21 @@ const SubjectCard = ({ subject }) => (
           </View>
         ) : null}
       </View>
+      {onShowOnMap && subject.espacioId ? (
+        <ShowOnMapLink
+          onPress={() => onShowOnMap(subject)}
+          style={styles.mapLink}
+        />
+      ) : null}
     </View>
   </AppCard>
 );
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 0,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginHorizontal: spacing.lg,
     marginBottom: spacing.md,
   },
@@ -53,7 +71,7 @@ const styles = StyleSheet.create({
   },
   name: {
     fontSize: fontSizes.body,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.gray1,
   },
   teacher: {
@@ -62,14 +80,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginTop: spacing.sm,
   },
   meta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginRight: spacing.lg,
+  },
+  mapLink: {
+    marginTop: spacing.md,
   },
   metaText: {
     fontSize: fontSizes.small,

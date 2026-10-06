@@ -2,10 +2,15 @@
 <!--
   Mapa del campus · UCC Santa Marta
 
-  Un solo mapa para todo el campus: el plano general con la planta baja de cada bloque en su
-  posición real, y encima los salones de todos los pisos. Se muestra dentro de un WebView (móvil)
-  o un iframe (web) y funciona sin conexión: Leaflet va incrustado (scripts/build-campus-map.js) y
-  la imagen del campus llega como data URL dentro de la configuración. Sin teselas, satélite ni GPS.
+  Un solo mapa para todo el campus. No se muestra el plano arquitectónico: el fondo es vectorial
+  (el lote y el contorno de cada bloque, en navegacion.base) y encima solo aparecen los espacios a
+  los que entran estudiantes y docentes (aulas, salas de cómputo, laboratorios, facultades,
+  oficinas de atención, cafeterías, baños y pasillos). Los espacios de servicio llegan inactivos
+  desde la API y no se dibujan. Si un plano no trae fondo vectorial (uno subido a mano por el
+  administrador), se usa su imagen como respaldo.
+
+  Se muestra dentro de un WebView (móvil) o un iframe (web) y funciona sin conexión: Leaflet va
+  incrustado (scripts/build-campus-map.js). Sin teselas, satélite ni GPS.
 
   Marcadores que se reemplazan:
     LEAFLET_CSS / LEAFLET_JS  → en build, con node_modules/leaflet/dist (campusMapTemplate.generated.js)
@@ -897,6 +902,13 @@
         }
 
         function addBuildingLabels() {
+          var base = CONFIG.plan.navegacion && CONFIG.plan.navegacion.base;
+          var labels = {};
+          ((base && base.edificios) || []).forEach(function (building) {
+            if (building.nombre && building.etiqueta) {
+              labels[building.nombre] = L.latLng(building.etiqueta[1], building.etiqueta[0]);
+            }
+          });
           var boxes = {};
           Object.keys(spaces).forEach(function (id) {
             var entry = spaces[id];
@@ -908,7 +920,7 @@
             boxes[name] = boxes[name] ? boxes[name].extend(b) : L.latLngBounds(b.getSouthWest(), b.getNorthEast());
           });
           Object.keys(boxes).forEach(function (name) {
-            L.marker(boxes[name].getCenter(), {
+            L.marker(labels[name] || boxes[name].getCenter(), {
               interactive: false,
               keyboard: false,
               icon: L.divIcon({ className: 'building-label', html: '', iconSize: [0, 0] }),
@@ -919,13 +931,44 @@
           });
         }
 
+        // Fondo vectorial: el lote del campus y el contorno de cada bloque. Va en un panel propio,
+        // debajo de los espacios, y no responde a toques (salvo para marcar el inicio de un camino).
+        function toLatLngs(ring) {
+          return (ring || []).map(function (p) {
+            return [p[1], p[0]];
+          });
+        }
+
+        function drawBase(base) {
+          map.createPane('campusBase');
+          map.getPane('campusBase').style.zIndex = 350;
+          var common = { pane: 'campusBase', interactive: false };
+          if (base.perimetro && base.perimetro.length > 2) {
+            L.polygon(
+              toLatLngs(base.perimetro),
+              L.extend({ color: theme.primary, weight: 1, opacity: 0.35, fillColor: theme.light, fillOpacity: 0.12 }, common)
+            ).addTo(map);
+          }
+          (base.edificios || []).forEach(function (building) {
+            (building.anillos || []).forEach(function (ring) {
+              if (ring.length > 2) {
+                L.polygon(
+                  toLatLngs(ring),
+                  L.extend({ color: theme.gray2, weight: 1.2, opacity: 0.55, fillColor: theme.white, fillOpacity: 1 }, common)
+                ).addTo(map);
+              }
+            });
+          });
+        }
+
         function init() {
           if (typeof L === 'undefined') {
             showMessage('No se pudo cargar el mapa.');
             send('error', { message: 'Leaflet no está disponible' });
             return;
           }
-          if (!CONFIG || !CONFIG.plan || !CONFIG.plan.imagen) {
+          var hasBase = !!(CONFIG && CONFIG.plan && CONFIG.plan.navegacion && CONFIG.plan.navegacion.base);
+          if (!CONFIG || !CONFIG.plan || !CONFIG.plan.ancho || !CONFIG.plan.alto || (!hasBase && !CONFIG.plan.imagen)) {
             showMessage('El mapa del campus todavía no está disponible.');
             send('error', { message: 'Falta la configuración del plano' });
             return;
@@ -948,7 +991,11 @@
             bounceAtZoomLimits: false,
           });
 
-          L.imageOverlay(plan.imagen, bounds).addTo(map);
+          if (hasBase) {
+            drawBase(plan.navegacion.base);
+          } else {
+            L.imageOverlay(plan.imagen, bounds).addTo(map);
+          }
           map.fitBounds(bounds);
           map.setMinZoom(map.getZoom() - 0.5);
 

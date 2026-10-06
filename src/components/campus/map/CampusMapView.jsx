@@ -1,19 +1,26 @@
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { WebView } from 'react-native-webview';
-import colors from '../../../theme/colors';
-import AppLoader from '../../common/AppLoader';
-import { buildMapHtml, parseMapMessage } from './buildMapHtml';
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react";
+import { StyleSheet, View } from "react-native";
+import { WebView } from "react-native-webview";
+import colors from "../../../theme/colors";
+import AppLoader from "../../common/AppLoader";
+import { buildMapHtml, parseMapMessage } from "./buildMapHtml";
 
 /**
  * @description Mapa interactivo del campus en un WebView, sin conexión: Leaflet con L.CRS.Simple sobre
- *              la imagen estática del plano. Para iluminar un salón, la app le envía su UUID con
+ *              un fondo vectorial del campus (sin el plano arquitectónico). Para iluminar un salón, la app le envía su UUID con
  *              injectJavaScript a la función global window.highlightSpace del mapa, que pinta el
  *              polígono y centra la vista. Si el mapa aún no cargó, el pedido espera a que esté listo.
  *              La versión web es CampusMapView.web.jsx (iframe), con la misma interfaz.
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @param {Object} props - Propiedades del componente
- * @param {Object} props.plan - Plano completo (imagen, ancho, alto y espacios con geometría)
+ * @param {Object} props.plan - Plano completo (ancho, alto, navegación y espacios con geometría)
  * @param {string|null} [props.selectedId] - UUID del espacio a iluminar; al cambiar se envía al mapa
  * @param {Function} [props.onSpacePress] - Recibe el UUID del salón que el estudiante tocó en el mapa
  * @param {Function} [props.onNotFound] - Recibe el UUID pedido cuando no está dibujado en este plano
@@ -25,7 +32,19 @@ import { buildMapHtml, parseMapMessage } from './buildMapHtml';
  * @returns {React.JSX.Element} Mapa del plano
  */
 const CampusMapView = forwardRef(
-  ({ plan, selectedId, onSpacePress, onNotFound, onReady, onRoute, onRouteError, onPickStart }, ref) => {
+  (
+    {
+      plan,
+      selectedId,
+      onSpacePress,
+      onNotFound,
+      onReady,
+      onRoute,
+      onRouteError,
+      onPickStart,
+    },
+    ref,
+  ) => {
     const webViewRef = useRef(null);
     const readyRef = useRef(false);
     const html = useMemo(() => buildMapHtml(plan), [plan]);
@@ -39,11 +58,13 @@ const CampusMapView = forwardRef(
     const highlight = useCallback(
       (id) => {
         if (!id) {
-          run('window.clearHighlight && window.clearHighlight()');
+          run("window.clearHighlight && window.clearHighlight()");
           return;
         }
         // JSON.stringify deja el UUID como literal de texto seguro dentro del script inyectado.
-        run(`window.highlightSpace && window.highlightSpace(${JSON.stringify(String(id))})`);
+        run(
+          `window.highlightSpace && window.highlightSpace(${JSON.stringify(String(id))})`,
+        );
       },
       [run],
     );
@@ -54,11 +75,11 @@ const CampusMapView = forwardRef(
         highlight,
         route: (id, start) =>
           run(
-            `window.routeTo && window.routeTo(${JSON.stringify(String(id))}, ${JSON.stringify(start || 'principal')})`,
+            `window.routeTo && window.routeTo(${JSON.stringify(String(id))}, ${JSON.stringify(start || "principal")})`,
           ),
-        clearRoute: () => run('window.clearRoute && window.clearRoute()'),
-        clear: () => run('window.clearHighlight && window.clearHighlight()'),
-        fit: () => run('window.fitPlan && window.fitPlan()'),
+        clearRoute: () => run("window.clearRoute && window.clearRoute()"),
+        clear: () => run("window.clearHighlight && window.clearHighlight()"),
+        fit: () => run("window.fitPlan && window.fitPlan()"),
       }),
       [highlight, run],
     );
@@ -75,7 +96,7 @@ const CampusMapView = forwardRef(
       if (!message) {
         return;
       }
-      if (message.type === 'ready') {
+      if (message.type === "ready") {
         readyRef.current = true;
         if (selectedId) {
           highlight(selectedId);
@@ -83,15 +104,15 @@ const CampusMapView = forwardRef(
         if (onReady) {
           onReady(message.payload);
         }
-      } else if (message.type === 'spacePress' && onSpacePress) {
+      } else if (message.type === "spacePress" && onSpacePress) {
         onSpacePress(message.payload.id);
-      } else if (message.type === 'notFound' && onNotFound) {
+      } else if (message.type === "notFound" && onNotFound) {
         onNotFound(message.payload.id);
-      } else if (message.type === 'route' && onRoute) {
+      } else if (message.type === "route" && onRoute) {
         onRoute(message.payload);
-      } else if (message.type === 'routeError' && onRouteError) {
+      } else if (message.type === "routeError" && onRouteError) {
         onRouteError(message.payload.message);
-      } else if (message.type === 'pickStart' && onPickStart) {
+      } else if (message.type === "pickStart" && onPickStart) {
         onPickStart();
       }
     };
@@ -101,8 +122,8 @@ const CampusMapView = forwardRef(
         <WebView
           key={plan.id}
           ref={webViewRef}
-          originWhitelist={['*']}
-          source={{ html, baseUrl: '' }}
+          originWhitelist={["*"]}
+          source={{ html, baseUrl: "" }}
           onMessage={handleMessage}
           onLoadStart={() => {
             readyRef.current = false;
@@ -124,13 +145,13 @@ const CampusMapView = forwardRef(
   },
 );
 
-CampusMapView.displayName = 'CampusMapView';
+CampusMapView.displayName = "CampusMapView";
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   webview: {
     flex: 1,

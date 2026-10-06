@@ -1,13 +1,13 @@
-import colors from '../../../theme/colors';
-import template from './campusMapTemplate.generated';
+import colors from "../../../theme/colors";
+import template from "./campusMapTemplate.generated";
 
-const CONFIG_MARKER = '/*__MAP_CONFIG__*/null';
+const CONFIG_MARKER = "/*__MAP_CONFIG__*/null";
 
 /** Origen de los mensajes que la app envía al mapa; el mapa ignora cualquier otro. */
-export const APP_MESSAGE_SOURCE = 'ucc-campus-app';
+export const APP_MESSAGE_SOURCE = "ucc-campus-app";
 
 /** Origen de los mensajes que el mapa envía a la app. */
-export const MAP_MESSAGE_SOURCE = 'ucc-campus-map';
+export const MAP_MESSAGE_SOURCE = "ucc-campus-map";
 
 /**
  * @description Serializa un valor para incrustarlo dentro de una etiqueta script sin que un texto
@@ -18,16 +18,17 @@ export const MAP_MESSAGE_SOURCE = 'ucc-campus-map';
  */
 export const toScriptJson = (value) =>
   JSON.stringify(value)
-    .replace(/</g, '\\u003c')
-    .replace(/\u2028/g, '\\u2028')
-    .replace(/\u2029/g, '\\u2029');
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 
 /**
- * @description Arma el HTML autocontenido del mapa: Leaflet, la imagen del plano (data URL), los
- *              salones de todos los pisos, la malla de caminos y los colores de la app. No necesita
- *              conexión para mostrarse.
+ * @description Arma el HTML autocontenido del mapa: Leaflet, el fondo vectorial del campus (lote y
+ *              bloques, en navegacion.base), los espacios de todos los pisos, la malla de caminos y
+ *              los colores de la app. La imagen del plano solo se usa si el plano no trae fondo
+ *              vectorial. No necesita conexión para mostrarse.
  * @author Diego Luna <diego.luna@campusucc.edu.co>
- * @param {Object} plan - Plano con imagen, ancho, alto y espacios (respuesta de GET /campus/plans/{id})
+ * @param {Object} plan - Plano con ancho, alto, espacios, navegación e imagen opcional (GET /campus/plans/{id})
  * @returns {string} Documento HTML para el WebView o el iframe
  */
 export const buildMapHtml = (plan) => {
@@ -73,14 +74,18 @@ export const buildMapHtml = (plan) => {
  */
 export const parseMapMessage = (raw) => {
   let data = raw;
-  if (typeof raw === 'string') {
+  if (typeof raw === "string") {
     try {
       data = JSON.parse(raw);
     } catch {
       return null;
     }
   }
-  if (!data || data.source !== MAP_MESSAGE_SOURCE || typeof data.type !== 'string') {
+  if (
+    !data ||
+    data.source !== MAP_MESSAGE_SOURCE ||
+    typeof data.type !== "string"
+  ) {
     return null;
   }
   return { type: data.type, payload: data.payload || {} };
