@@ -281,7 +281,6 @@ const CampusMapScreen = ({ navigation, route }) => {
                   <Text style={styles.routeStep}>{summary.steps}</Text>
                 </View>
               ) : null}
-              {summary.note ? <Text style={styles.routeHint}>{summary.note}</Text> : null}
             </>
           ) : null}
         </>

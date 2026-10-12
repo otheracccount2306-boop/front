@@ -10,8 +10,5 @@ export const routeSummary = (info) => {
   } else if (changes > 0) {
     steps = 'Usa la escalera marcada en el mapa';
   }
-  const note = info.aproximado
-    ? 'El plano no muestra un acceso directo a este espacio; el camino te deja lo más cerca posible.'
-    : null;
-  return { main, steps, note };
+  return { main, steps };
 };

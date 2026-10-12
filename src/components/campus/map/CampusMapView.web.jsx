@@ -83,7 +83,7 @@ const CampusMapView = forwardRef(
           ref={frameRef}
           title={`Plano ${plan.nombre || ''}`}
           srcDoc={html}
-          sandbox="allow-scripts"
+          sandbox="allow-scripts allow-same-origin"
           style={frameStyle}
         />
       </View>
