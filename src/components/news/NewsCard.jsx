@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import colors from '../../theme/colors';
+import { useCardGutter } from '../../theme/layout';
 import { cardShadow, fontSizes, radius, spacing } from '../../theme/typography';
 import { categoryLabel } from '../../utils/category.utils';
 import { formatLongDate } from '../../utils/date.utils';
@@ -16,21 +17,28 @@ import CoverImage from './CoverImage';
  * @param {Function} props.onPress - Recibe la noticia al tocar la tarjeta
  * @returns {React.JSX.Element} Tarjeta de noticia
  */
-const NewsCard = ({ news, onPress }) => (
-  <Pressable onPress={() => onPress(news)} style={styles.card} accessibilityRole="button">
-    <CoverImage uri={news.imagenUrl} height={140} />
-    <View style={styles.content}>
-      <AppBadge label={categoryLabel(news.categoria)} variant="success" />
-      <Text style={styles.title}>{news.titulo}</Text>
-      {news.resumen ? (
-        <Text style={styles.summary} numberOfLines={3}>
-          {news.resumen}
-        </Text>
-      ) : null}
-      <Text style={styles.date}>{formatLongDate(news.publicadoEn)}</Text>
-    </View>
-  </Pressable>
-);
+const NewsCard = ({ news, onPress }) => {
+  const gutter = useCardGutter();
+  return (
+    <Pressable
+      onPress={() => onPress(news)}
+      style={[styles.card, { marginHorizontal: gutter }]}
+      accessibilityRole="button"
+    >
+      <CoverImage uri={news.imagenUrl} height={140} />
+      <View style={styles.content}>
+        <AppBadge label={categoryLabel(news.categoria)} variant="success" />
+        <Text style={styles.title}>{news.titulo}</Text>
+        {news.resumen ? (
+          <Text style={styles.summary} numberOfLines={3}>
+            {news.resumen}
+          </Text>
+        ) : null}
+        <Text style={styles.date}>{formatLongDate(news.publicadoEn)}</Text>
+      </View>
+    </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
   card: {

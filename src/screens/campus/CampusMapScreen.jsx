@@ -6,26 +6,28 @@ import AppIcon from '../../components/common/AppIcon';
 import AppLoader from '../../components/common/AppLoader';
 import EmptyState from '../../components/common/EmptyState';
 import ErrorBanner from '../../components/common/ErrorBanner';
-import ScreenContainer from '../../components/common/ScreenContainer';
 import ScreenHeader from '../../components/common/ScreenHeader';
 import SearchBar from '../../components/common/SearchBar';
-import SegmentedTabs from '../../components/common/SegmentedTabs';
-import { pickCampusPlan, useMappedSpaceSearch, usePlanDetail, usePlans } from '../../hooks/useCampusMap';
+import { pickCampusPlan, useCampusSpaceSearch, usePlanDetail, usePlans } from '../../hooks/useCampusMap';
 import useSpaces from '../../hooks/useSpaces';
-import { CAMPUS_MODULE_TABS } from '../../navigation/tabItems';
 import colors from '../../theme/colors';
+import { useLayout } from '../../theme/layout';
 import { cardShadow, fontSizes, radius, spacing } from '../../theme/typography';
 import { ALL_VALUE, categoryLabel } from '../../utils/category.utils';
 
 const TAP_START = 'tap';
 
+/** Ancho del panel lateral del mapa en pantallas anchas. */
+const PANEL_WIDTH = 360;
+
 /**
- * @description Pantalla del mapa del campus. Hay un solo mapa con todos los bloques: el estudiante
- *              busca un salón por nombre o código (búsqueda local, funciona sin conexión), la app
- *              envía su UUID al mapa, que cambia al piso del salón, lo ilumina y centra la vista.
- *              Con "Cómo llegar" el mapa dibuja el camino desde una entrada del campus o desde el
- *              punto que el estudiante toque. Acepta route.params.spaceId para abrir el mapa ya
- *              enfocado en un espacio (por ejemplo, desde el detalle de un espacio).
+ * @description Pantalla principal del módulo Campus: el mapa ocupa la pantalla y la búsqueda por
+ *              nombre o código es una opción secundaria (un botón sobre el mapa en el celular; un
+ *              panel lateral en pantallas anchas). Al elegir un salón, el mapa cambia a su piso, lo
+ *              ilumina y lo centra; "Cómo llegar" dibuja el camino desde una entrada del campus o
+ *              desde el punto que el estudiante toque. Funciona sin conexión con la copia guardada
+ *              del mapa y de los espacios. Acepta route.params.spaceId para abrirse enfocado en un
+ *              espacio (por ejemplo, desde "Ver en mapa" en el horario).
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @param {Object} props - Props de navegación de React Navigation
  * @param {Object} props.navigation - Objeto de navegación
@@ -34,6 +36,8 @@ const TAP_START = 'tap';
  */
 const CampusMapScreen = ({ navigation, route }) => {
   const requestedId = route.params ? route.params.spaceId : undefined;
+  const layout = useLayout();
+  const wide = layout.isExpanded;
   const { plans, loading: plansLoading, error: plansError, refresh } = usePlans();
   const { spaces } = useSpaces(ALL_VALUE);
   const campus = useMemo(() => pickCampusPlan(plans), [plans]);
@@ -43,6 +47,7 @@ const CampusMapScreen = ({ navigation, route }) => {
     error: planError,
   } = usePlanDetail(campus ? campus.id : null, campus ? campus.actualizadoEn : null);
   const [selectedId, setSelectedId] = useState(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [detail, setDetail] = useState(null);
   const [notice, setNotice] = useState(null);
@@ -53,26 +58,35 @@ const CampusMapScreen = ({ navigation, route }) => {
   const mapRef = useRef(null);
 
   const spacesById = useMemo(() => new Map(spaces.map((space) => [space.id, space])), [spaces]);
-  const results = useMappedSpaceSearch(spaces, query);
+  const results = useCampusSpaceSearch(spaces, query);
   const selected = selectedId ? spacesById.get(selectedId) : null;
   const entradas = mapInfo.entradas || [];
   const startOptions = [...entradas, { id: TAP_START, nombre: 'Tocar el mapa' }];
+  const showSearch = wide || searchOpen;
+  const searching = query.trim().length >= 2;
+
+  const resetRoute = () => {
+    setRouteInfo(null);
+    setRouting(false);
+    setStart(null);
+    if (mapRef.current) {
+      mapRef.current.clearRoute();
+    }
+  };
 
   /**
-   * @description Enfoca un espacio en el mapa y limpia el camino anterior.
+   * @description Enfoca un espacio en el mapa y limpia el camino anterior. Si el espacio no está
+   *              ubicado en el mapa, muestra su detalle con un aviso.
    * @author Diego Luna <diego.luna@campusucc.edu.co>
-   * @param {Object} space - Espacio con geometría
+   * @param {Object} space - Espacio elegido
    * @returns {void}
    */
   const focusSpace = (space) => {
     setNotice(null);
-    setRouteInfo(null);
-    setRouting(false);
-    if (mapRef.current) {
-      mapRef.current.clearRoute();
-    }
+    resetRoute();
     if (!space.geometria) {
       setNotice(`${space.nombre} todavía no está ubicado en el mapa.`);
+      setDetail(space);
       return;
     }
     setSelectedId(space.id);
@@ -89,9 +103,14 @@ const CampusMapScreen = ({ navigation, route }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestedId, spacesById]);
 
-  const choose = (space) => {
+  const closeSearch = () => {
     Keyboard.dismiss();
     setQuery('');
+    setSearchOpen(false);
+  };
+
+  const choose = (space) => {
+    closeSearch();
     focusSpace(space);
   };
 
@@ -112,6 +131,34 @@ const CampusMapScreen = ({ navigation, route }) => {
     mapRef.current.route(selected.id, startId);
   };
 
+  const header = <ScreenHeader title="Campus" subtitle="Mapa del campus" />;
+
+  if (plansLoading) {
+    return (
+      <View style={styles.root}>
+        {header}
+        <AppLoader fill />
+      </View>
+    );
+  }
+
+  if (!campus) {
+    return (
+      <View style={styles.root}>
+        {header}
+        <View style={styles.fill}>
+          {plansError ? (
+            <View style={styles.padded}>
+              <ErrorBanner message={plansError} onRetry={refresh} />
+            </View>
+          ) : (
+            <EmptyState icon="map-outline" message="Aún no hay mapa del campus" />
+          )}
+        </View>
+      </View>
+    );
+  }
+
   let map;
   if (planLoading && !plan) {
     map = <AppLoader fill />;
@@ -124,11 +171,8 @@ const CampusMapScreen = ({ navigation, route }) => {
         onReady={(info) => setMapInfo({ entradas: info.entradas || [], navegacion: Boolean(info.navegacion) })}
         onSpacePress={(id) => {
           setSelectedId(id);
-          setRouteInfo(null);
-          setRouting(false);
-          if (mapRef.current) {
-            mapRef.current.clearRoute();
-          }
+          setNotice(null);
+          resetRoute();
         }}
         onNotFound={() => setNotice('Este espacio no aparece en el mapa.')}
         onRoute={(info) => {
@@ -152,169 +196,290 @@ const CampusMapScreen = ({ navigation, route }) => {
     map = <EmptyState icon="map-outline" message="El mapa del campus no está disponible" />;
   }
 
-  const header = <ScreenHeader title="Campus" subtitle="Mapa del campus" />;
-  const tabs = (
-    <SegmentedTabs items={CAMPUS_MODULE_TABS} current="CampusMap" onChange={(name) => navigation.navigate(name)} />
+  const resultList = searching ? (
+    <View style={wide ? styles.resultsPanel : styles.resultsFloating}>
+      {results.length === 0 ? (
+        <Text style={styles.noResults}>No encontramos espacios con esa búsqueda</Text>
+      ) : (
+        <ScrollView keyboardShouldPersistTaps="handled" style={styles.resultsScroll}>
+          {results.map((space) => (
+            <Pressable
+              key={space.id}
+              onPress={() => choose(space)}
+              style={({ pressed }) => [styles.result, pressed && styles.resultPressed]}
+              accessibilityRole="button"
+              accessibilityLabel={`Ver ${space.nombre} en el mapa`}
+            >
+              <AppIcon
+                name={space.ubicado ? 'location-outline' : 'help-circle-outline'}
+                size={18}
+                color={space.ubicado ? colors.primary : colors.gray3}
+              />
+              <View style={styles.resultText}>
+                <Text style={styles.resultName} numberOfLines={1}>
+                  {space.nombre}
+                </Text>
+                <Text style={styles.resultMeta} numberOfLines={1}>
+                  {[
+                    space.codigo,
+                    space.edificio,
+                    space.piso ? `Piso ${space.piso}` : null,
+                    space.ubicado ? null : 'Sin ubicar',
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </Text>
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+    </View>
+  ) : null;
+
+  const selectedCard = selected ? (
+    <View style={wide ? styles.panelCard : styles.sheet}>
+      <View style={styles.sheetHeader}>
+        <View style={styles.sheetTitle}>
+          <Text style={styles.sheetName} numberOfLines={2}>
+            {selected.nombre}
+          </Text>
+          <Text style={styles.sheetMeta} numberOfLines={2}>
+            {[
+              selected.codigo,
+              categoryLabel(selected.categoria),
+              selected.edificio,
+              selected.piso ? `Piso ${selected.piso}` : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => setDetail(selected)}
+          hitSlop={10}
+          style={styles.iconButton}
+          accessibilityRole="button"
+          accessibilityLabel="Ver detalle"
+        >
+          <AppIcon name="information-circle-outline" size={24} color={colors.primary} />
+        </Pressable>
+      </View>
+      {mapInfo.navegacion ? (
+        <>
+          <Text style={styles.sheetLabel}>Cómo llegar desde</Text>
+          <ScrollView
+            horizontal={!wide}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={wide ? styles.chipsWrap : styles.chips}
+          >
+            {startOptions.map((option) => (
+              <Pressable
+                key={option.id}
+                onPress={() => requestRoute(option.id)}
+                style={[styles.chip, start === option.id && styles.chipActive]}
+                accessibilityRole="button"
+              >
+                <AppIcon
+                  name={option.id === TAP_START ? 'hand-left-outline' : 'walk-outline'}
+                  size={14}
+                  color={start === option.id ? colors.white : colors.primary}
+                />
+                <Text style={[styles.chipText, start === option.id && styles.chipTextActive]} numberOfLines={1}>
+                  {option.nombre}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+          {routing && start === TAP_START ? (
+            <Text style={styles.routeHint}>Toca en el mapa el punto donde estás</Text>
+          ) : null}
+          {routing && start !== TAP_START ? <Text style={styles.routeHint}>Calculando el camino…</Text> : null}
+          {routeInfo ? (
+            <View style={styles.routeRow}>
+              <AppIcon name="footsteps-outline" size={18} color={colors.primary} />
+              <Text style={styles.routeText}>
+                {`${routeInfo.minutos} min caminando · ${routeInfo.distancia} m`}
+                {routeInfo.piso && routeInfo.piso !== '1' ? ` · Sube al piso ${routeInfo.piso}` : ''}
+              </Text>
+            </View>
+          ) : null}
+        </>
+      ) : null}
+    </View>
+  ) : null;
+
+  const noticeBanner = notice ? (
+    <View style={wide ? styles.panelNotice : styles.floatingNotice}>
+      <ErrorBanner message={notice} variant="info" />
+    </View>
+  ) : null;
+
+  const modal = (
+    <SpaceDetailModal
+      space={detail}
+      onClose={() => setDetail(null)}
+      onShowOnMap={(space) => {
+        setDetail(null);
+        focusSpace(space);
+      }}
+    />
   );
 
-  if (plansLoading) {
+  if (wide) {
     return (
-      <ScreenContainer header={header}>
-        {tabs}
-        <AppLoader fill />
-      </ScreenContainer>
-    );
-  }
-
-  if (!campus) {
-    return (
-      <ScreenContainer header={header}>
-        {tabs}
-        <View style={styles.fill}>
-          {plansError ? (
-            <View style={styles.padded}>
-              <ErrorBanner message={plansError} onRetry={refresh} />
-            </View>
-          ) : (
-            <EmptyState icon="map-outline" message="Aún no hay mapa del campus" />
-          )}
+      <View style={styles.root}>
+        {header}
+        <View style={styles.split}>
+          <View style={styles.panel}>
+            <Text style={styles.panelTitle}>Buscar un espacio</Text>
+            <SearchBar
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Nombre o código, por ejemplo Aula 2 101"
+              style={styles.panelSearch}
+            />
+            {resultList}
+            {!searching ? (
+              <ScrollView contentContainerStyle={styles.panelBody}>
+                {noticeBanner}
+                {selectedCard || (
+                  <Text style={styles.panelHint}>
+                    Toca un espacio en el mapa o búscalo por su nombre para ver cómo llegar.
+                  </Text>
+                )}
+              </ScrollView>
+            ) : null}
+          </View>
+          <View style={styles.mapArea}>{map}</View>
         </View>
-      </ScreenContainer>
+        {modal}
+      </View>
     );
   }
 
   return (
-    <ScreenContainer header={header}>
-      {tabs}
-      <SearchBar value={query} onChangeText={setQuery} placeholder="¿Qué salón buscas? Nombre o código" />
-      {notice ? (
-        <View style={styles.padded}>
-          <ErrorBanner message={notice} variant="info" />
-        </View>
-      ) : null}
+    <View style={styles.root}>
+      {header}
       <View style={styles.mapArea}>
         {map}
-        {results.length > 0 ? (
-          <View style={styles.results}>
-            {results.map((space) => (
+        {showSearch ? (
+          <View style={styles.searchOverlay}>
+            <View style={styles.searchRow}>
+              <SearchBar
+                value={query}
+                onChangeText={setQuery}
+                placeholder="Nombre o código del espacio"
+                autoFocus
+                style={styles.overlaySearch}
+              />
               <Pressable
-                key={space.id}
-                onPress={() => choose(space)}
-                style={({ pressed }) => [styles.result, pressed && styles.resultPressed]}
+                onPress={closeSearch}
+                hitSlop={10}
+                style={styles.closeButton}
                 accessibilityRole="button"
-                accessibilityLabel={`Ver ${space.nombre} en el mapa`}
+                accessibilityLabel="Cerrar búsqueda"
               >
-                <AppIcon name="location-outline" size={16} color={colors.primary} />
-                <View style={styles.resultText}>
-                  <Text style={styles.resultName} numberOfLines={1}>
-                    {space.nombre}
-                  </Text>
-                  <Text style={styles.resultMeta} numberOfLines={1}>
-                    {[space.codigo, space.edificio, space.piso ? `Piso ${space.piso}` : null]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </Text>
-                </View>
+                <AppIcon name="close" size={22} color={colors.gray1} />
               </Pressable>
-            ))}
-          </View>
-        ) : null}
-        {query.trim().length >= 2 && results.length === 0 ? (
-          <View style={styles.results}>
-            <Text style={styles.noResults}>No hay salones ubicados con esa búsqueda</Text>
-          </View>
-        ) : null}
-      </View>
-      {selected && results.length === 0 ? (
-        <View style={styles.sheet}>
-          <View style={styles.sheetHeader}>
-            <View style={styles.sheetTitle}>
-              <Text style={styles.sheetName} numberOfLines={1}>
-                {selected.nombre}
-              </Text>
-              <Text style={styles.sheetMeta} numberOfLines={1}>
-                {[
-                  selected.codigo,
-                  categoryLabel(selected.categoria),
-                  selected.edificio,
-                  selected.piso ? `Piso ${selected.piso}` : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </Text>
             </View>
-            <Pressable onPress={() => setDetail(selected)} accessibilityRole="button" accessibilityLabel="Ver detalle">
-              <AppIcon name="information-circle-outline" size={24} color={colors.primary} />
-            </Pressable>
+            {resultList}
           </View>
-          {mapInfo.navegacion ? (
-            <>
-              <Text style={styles.sheetLabel}>Cómo llegar desde</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-                {startOptions.map((option) => (
-                  <Pressable
-                    key={option.id}
-                    onPress={() => requestRoute(option.id)}
-                    style={[styles.chip, start === option.id && styles.chipActive]}
-                    accessibilityRole="button"
-                  >
-                    <AppIcon
-                      name={option.id === TAP_START ? 'hand-left-outline' : 'walk-outline'}
-                      size={14}
-                      color={start === option.id ? colors.white : colors.primary}
-                    />
-                    <Text style={[styles.chipText, start === option.id && styles.chipTextActive]} numberOfLines={1}>
-                      {option.nombre}
-                    </Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
-              {routing && start !== TAP_START ? <Text style={styles.routeText}>Calculando el camino…</Text> : null}
-              {routeInfo ? (
-                <View style={styles.routeRow}>
-                  <AppIcon name="footsteps-outline" size={18} color={colors.primary} />
-                  <Text style={styles.routeText}>
-                    {`${routeInfo.minutos} min caminando · ${routeInfo.distancia} m`}
-                    {routeInfo.piso && routeInfo.piso !== '1' ? ` · Sube al piso ${routeInfo.piso}` : ''}
-                  </Text>
-                </View>
-              ) : null}
-            </>
-          ) : null}
-        </View>
-      ) : null}
-      <SpaceDetailModal space={detail} onClose={() => setDetail(null)} />
-    </ScreenContainer>
+        ) : (
+          <Pressable
+            onPress={() => setSearchOpen(true)}
+            style={({ pressed }) => [styles.searchPill, pressed && styles.resultPressed]}
+            accessibilityRole="button"
+            accessibilityLabel="Buscar un espacio"
+          >
+            <AppIcon name="search" size={16} color={colors.primary} />
+            <Text style={styles.searchPillText}>Buscar</Text>
+          </Pressable>
+        )}
+        {!showSearch ? noticeBanner : null}
+      </View>
+      {!showSearch ? selectedCard : null}
+      {modal}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   fill: {
     flex: 1,
   },
   padded: {
-    marginHorizontal: spacing.lg,
+    margin: spacing.lg,
   },
   mapArea: {
     flex: 1,
+  },
+  split: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  panel: {
+    width: PANEL_WIDTH,
+    backgroundColor: colors.white,
+    borderRightWidth: 1,
+    borderRightColor: colors.gray4,
+  },
+  panelTitle: {
+    fontSize: fontSizes.small,
+    fontWeight: '700',
+    color: colors.gray3,
+    textTransform: 'uppercase',
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+  },
+  panelSearch: {
     marginTop: spacing.sm,
+  },
+  panelBody: {
+    paddingBottom: spacing.xl,
+  },
+  panelHint: {
+    fontSize: fontSizes.body,
+    color: colors.gray2,
+    marginHorizontal: spacing.lg,
+    lineHeight: 20,
+  },
+  panelNotice: {
+    marginHorizontal: spacing.lg,
+  },
+  panelCard: {
+    marginHorizontal: spacing.lg,
+    padding: spacing.lg,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.gray4,
+    backgroundColor: colors.white,
+  },
+  resultsPanel: {
+    flex: 1,
     borderTopWidth: 1,
     borderTopColor: colors.gray4,
   },
-  results: {
-    position: 'absolute',
-    top: spacing.sm,
-    left: spacing.lg,
-    right: spacing.lg,
+  resultsFloating: {
+    marginHorizontal: spacing.md,
     backgroundColor: colors.white,
     borderRadius: radius.card,
     paddingVertical: spacing.xs,
+    maxHeight: 360,
     ...cardShadow,
+  },
+  resultsScroll: {
+    flexGrow: 0,
   },
   result: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
+    minHeight: 52,
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
   },
   resultPressed: {
@@ -322,7 +487,7 @@ const styles = StyleSheet.create({
   },
   resultText: {
     flex: 1,
-    marginLeft: spacing.sm,
+    marginLeft: spacing.md,
   },
   resultName: {
     fontSize: fontSizes.body,
@@ -335,9 +500,61 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   noResults: {
-    fontSize: fontSizes.small,
+    fontSize: fontSizes.body,
     color: colors.gray2,
-    padding: spacing.md,
+    padding: spacing.lg,
+  },
+  searchPill: {
+    position: 'absolute',
+    top: spacing.md,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 40,
+    paddingHorizontal: spacing.lg,
+    borderRadius: 20,
+    backgroundColor: colors.white,
+    ...cardShadow,
+  },
+  searchPillText: {
+    fontSize: fontSizes.body,
+    fontWeight: '700',
+    color: colors.primary,
+    marginLeft: spacing.sm,
+  },
+  searchOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingTop: spacing.sm,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: spacing.md,
+  },
+  overlaySearch: {
+    flex: 1,
+    marginHorizontal: 0,
+    marginVertical: spacing.sm,
+    ...cardShadow,
+  },
+  closeButton: {
+    width: 44,
+    height: 44,
+    marginLeft: spacing.sm,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.white,
+    ...cardShadow,
+  },
+  floatingNotice: {
+    position: 'absolute',
+    bottom: spacing.md,
+    left: spacing.md,
+    right: spacing.md,
   },
   sheet: {
     backgroundColor: colors.white,
@@ -365,6 +582,12 @@ const styles = StyleSheet.create({
     color: colors.gray2,
     marginTop: 2,
   },
+  iconButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sheetLabel: {
     fontSize: fontSizes.label,
     fontWeight: '700',
@@ -376,16 +599,22 @@ const styles = StyleSheet.create({
   chips: {
     paddingVertical: spacing.xs,
   },
+  chipsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingVertical: spacing.xs,
+  },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 36,
     borderWidth: 1,
     borderColor: colors.primary,
     borderRadius: radius.chip,
     paddingHorizontal: spacing.md,
-    paddingVertical: 6,
     marginRight: spacing.sm,
-    maxWidth: 260,
+    marginBottom: spacing.sm,
+    maxWidth: 280,
   },
   chipActive: {
     backgroundColor: colors.primary,
@@ -399,17 +628,22 @@ const styles = StyleSheet.create({
   chipTextActive: {
     color: colors.white,
   },
+  routeHint: {
+    fontSize: fontSizes.small,
+    color: colors.gray2,
+    marginTop: spacing.xs,
+  },
   routeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
   routeText: {
+    flex: 1,
     fontSize: fontSizes.body,
     fontWeight: '600',
     color: colors.gray1,
-    marginLeft: spacing.xs,
-    marginTop: spacing.xs,
+    marginLeft: spacing.sm,
   },
 });
 

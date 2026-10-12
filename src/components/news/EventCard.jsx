@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import colors, { getCategoryColor } from '../../theme/colors';
+import { useCardGutter } from '../../theme/layout';
 import { fontSizes, spacing } from '../../theme/typography';
 import { categoryLabel } from '../../utils/category.utils';
 import { formatEventDateTime, isInCurrentWeek } from '../../utils/date.utils';
@@ -17,10 +18,11 @@ import AppIcon from '../common/AppIcon';
  * @returns {React.JSX.Element} Tarjeta de evento
  */
 const EventCard = ({ event }) => {
+  const gutter = useCardGutter();
   const thisWeek = isInCurrentWeek(event.fechaHora);
 
   return (
-    <AppCard style={[styles.card, thisWeek ? styles.cardHighlighted : null]}>
+    <AppCard style={[styles.card, { marginHorizontal: gutter }, thisWeek ? styles.cardHighlighted : null]}>
       <View style={[styles.bar, { backgroundColor: getCategoryColor(event.categoria) }]} />
       <View style={styles.content}>
         <View style={styles.badges}>

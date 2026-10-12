@@ -12,9 +12,16 @@ import { openSpaceOnMap } from '../../navigation/campusLinks';
 import { TAB_ITEMS } from '../../navigation/tabItems';
 import useCacheStore from '../../store/cache.store';
 import colors from '../../theme/colors';
+import { useLayout } from '../../theme/layout';
 import { cardShadow, fontSizes, radius, spacing } from '../../theme/typography';
 import { categoryLabel } from '../../utils/category.utils';
-import { findNextClass, formatEventDateTime, formatLongDate, formatTimeRange, getDayCode } from '../../utils/date.utils';
+import {
+  findNextClass,
+  formatEventDateTime,
+  formatLongDate,
+  formatTimeRange,
+  getDayCode,
+} from '../../utils/date.utils';
 import { getErrorMessage } from '../../utils/error.utils';
 
 const QUICK_ACCESS = TAB_ITEMS.filter((item) => item.name !== 'InicioTab');
@@ -43,6 +50,11 @@ const isolate = (request) =>
  */
 const DashboardScreen = ({ navigation }) => {
   const { user } = useAuth();
+  const layout = useLayout();
+  // Mobile first: 2 accesos por fila en el celular y 4 desde tableta; las tres tarjetas de resumen
+  // van una debajo de otra y se ponen lado a lado solo cuando caben las tres.
+  const tileWidth = layout.isCompact ? '50%' : '25%';
+  const cardsInRow = layout.columns(260, 3) === 3;
   const [schedule, setSchedule] = useState(IDLE);
   const [news, setNews] = useState(IDLE);
   const [events, setEvents] = useState(IDLE);
@@ -105,7 +117,7 @@ const DashboardScreen = ({ navigation }) => {
           {QUICK_ACCESS.map((item) => (
             <Pressable
               key={item.name}
-              style={styles.tile}
+              style={[styles.tile, { width: tileWidth }]}
               onPress={() => navigation.navigate(item.name)}
               accessibilityRole="button"
             >
@@ -117,55 +129,73 @@ const DashboardScreen = ({ navigation }) => {
           ))}
         </View>
 
-        <DashboardCard title="Próxima clase hoy" icon="time-outline" loading={schedule.loading} error={schedule.error}>
-          {nextClass ? (
-            <View>
-              <Text style={styles.primaryText}>{nextClass.nombre}</Text>
-              <Text style={styles.secondaryText}>
-                {formatTimeRange(nextClass.horaInicio, nextClass.horaFin)}
-                {nextClass.aula ? ` · ${nextClass.aula}` : ''}
-              </Text>
-              {nextClass.espacioId ? (
-                <ShowOnMapLink onPress={() => openSpaceOnMap(navigation, nextClass.espacioId)} style={styles.mapLink} />
-              ) : null}
-            </View>
-          ) : (
-            <Text style={styles.secondaryText}>{classMessage}</Text>
-          )}
-        </DashboardCard>
-
-        <DashboardCard title="Próximo evento" icon="calendar-outline" loading={events.loading} error={events.error}>
-          {nextEvent ? (
-            <View>
-              <Text style={styles.primaryText}>{nextEvent.nombre}</Text>
-              <Text style={styles.secondaryText}>
-                {formatEventDateTime(nextEvent.fechaHora)}
-                {nextEvent.lugar ? ` · ${nextEvent.lugar}` : ''}
-              </Text>
-            </View>
-          ) : (
-            <Text style={styles.secondaryText}>No hay eventos próximos.</Text>
-          )}
-        </DashboardCard>
-
-        <DashboardCard
-          title="Última noticia"
-          icon="newspaper-outline"
-          loading={news.loading}
-          error={news.error}
-          onPress={lastNews ? () => navigation.navigate('NoticiasTab', { screen: 'NewsDetail', params: { id: lastNews.id } }) : undefined}
-        >
-          {lastNews ? (
-            <View>
-              <Text style={styles.primaryText}>{lastNews.titulo}</Text>
-              <Text style={styles.secondaryText}>
-                {categoryLabel(lastNews.categoria)} · {formatLongDate(lastNews.publicadoEn)}
-              </Text>
-            </View>
-          ) : (
-            <Text style={styles.secondaryText}>Aún no hay noticias publicadas.</Text>
-          )}
-        </DashboardCard>
+        <View style={cardsInRow ? styles.cardRow : null}>
+          <View style={cardsInRow ? styles.cardCell : null}>
+            <DashboardCard
+              title="Próxima clase hoy"
+              icon="time-outline"
+              loading={schedule.loading}
+              error={schedule.error}
+            >
+              {nextClass ? (
+                <View>
+                  <Text style={styles.primaryText}>{nextClass.nombre}</Text>
+                  <Text style={styles.secondaryText}>
+                    {formatTimeRange(nextClass.horaInicio, nextClass.horaFin)}
+                    {nextClass.aula ? ` · ${nextClass.aula}` : ''}
+                  </Text>
+                  {nextClass.espacioId ? (
+                    <ShowOnMapLink
+                      onPress={() => openSpaceOnMap(navigation, nextClass.espacioId)}
+                      style={styles.mapLink}
+                    />
+                  ) : null}
+                </View>
+              ) : (
+                <Text style={styles.secondaryText}>{classMessage}</Text>
+              )}
+            </DashboardCard>
+          </View>
+          <View style={cardsInRow ? styles.cardCell : null}>
+            <DashboardCard title="Próximo evento" icon="calendar-outline" loading={events.loading} error={events.error}>
+              {nextEvent ? (
+                <View>
+                  <Text style={styles.primaryText}>{nextEvent.nombre}</Text>
+                  <Text style={styles.secondaryText}>
+                    {formatEventDateTime(nextEvent.fechaHora)}
+                    {nextEvent.lugar ? ` · ${nextEvent.lugar}` : ''}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.secondaryText}>No hay eventos próximos.</Text>
+              )}
+            </DashboardCard>
+          </View>
+          <View style={cardsInRow ? styles.cardCell : null}>
+            <DashboardCard
+              title="Última noticia"
+              icon="newspaper-outline"
+              loading={news.loading}
+              error={news.error}
+              onPress={
+                lastNews
+                  ? () => navigation.navigate('NoticiasTab', { screen: 'NewsDetail', params: { id: lastNews.id } })
+                  : undefined
+              }
+            >
+              {lastNews ? (
+                <View>
+                  <Text style={styles.primaryText}>{lastNews.titulo}</Text>
+                  <Text style={styles.secondaryText}>
+                    {categoryLabel(lastNews.categoria)} · {formatLongDate(lastNews.publicadoEn)}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.secondaryText}>Aún no hay noticias publicadas.</Text>
+              )}
+            </DashboardCard>
+          </View>
+        </View>
       </ScrollView>
     </ScreenContainer>
   );
@@ -183,8 +213,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   tile: {
-    width: '50%',
     padding: spacing.xs,
+  },
+  cardRow: {
+    flexDirection: 'row',
+    marginHorizontal: -spacing.xs,
+  },
+  cardCell: {
+    flex: 1,
+    paddingHorizontal: spacing.xs,
   },
   tileCard: {
     backgroundColor: colors.white,

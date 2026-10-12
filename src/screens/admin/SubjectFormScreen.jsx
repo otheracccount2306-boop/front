@@ -4,7 +4,7 @@ import { createSubject, updateSubject } from '../../api/admin.api';
 import AdminFormField from '../../components/admin/AdminFormField';
 import AdminHeader from '../../components/admin/AdminHeader';
 import AdminSwitch from '../../components/admin/AdminSwitch';
-import DaysSelector from '../../components/admin/DaysSelector';
+import DaysSelector from '../../components/common/DaysSelector';
 import AppButton from '../../components/common/AppButton';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import ErrorBanner from '../../components/common/ErrorBanner';

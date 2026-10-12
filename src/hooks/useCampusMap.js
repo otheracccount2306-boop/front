@@ -6,7 +6,7 @@ import { matchesTerm } from '../utils/text.utils';
 import useCachedResource from './useCachedResource';
 
 const MIN_SEARCH_LENGTH = 2;
-const MAX_RESULTS = 6;
+const MAX_RESULTS = 8;
 
 /**
  * @description Consulta los planos del campus. Es una referencia estable para el hook con caché.
@@ -94,19 +94,23 @@ export const usePlanDetail = (planId, updatedAt) => {
 };
 
 /**
- * @description Busca, en el dispositivo y sin consultar la API, los espacios que ya tienen ubicación
- *              en algún plano. Ignora tildes y mayúsculas y funciona sin conexión.
+ * @description Búsqueda local de espacios para el mapa (funciona sin conexión): por nombre o
+ *              código, primero los que están ubicados en el mapa y después los que todavía no.
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @param {Array} spaces - Espacios en caché (incluyen planoId y geometria)
  * @param {string} query - Texto escrito por el estudiante
- * @returns {Array} Hasta seis espacios ubicados que coinciden por nombre o código
+ * @returns {Array} Hasta ocho espacios que coinciden, cada uno con `ubicado` (boolean)
  */
-export const useMappedSpaceSearch = (spaces, query) =>
+export const useCampusSpaceSearch = (spaces, query) =>
   useMemo(() => {
     if (query.trim().length < MIN_SEARCH_LENGTH) {
       return [];
     }
-    return spaces
-      .filter((space) => space.planoId && space.geometria && matchesTerm(space, ['nombre', 'codigo'], query))
-      .slice(0, MAX_RESULTS);
+    const matches = spaces
+      .filter((space) => matchesTerm(space, ['nombre', 'codigo'], query))
+      .map((space) => ({ ...space, ubicado: Boolean(space.planoId && space.geometria) }));
+    return [...matches.filter((space) => space.ubicado), ...matches.filter((space) => !space.ubicado)].slice(
+      0,
+      MAX_RESULTS,
+    );
   }, [spaces, query]);

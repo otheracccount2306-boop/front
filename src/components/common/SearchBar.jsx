@@ -14,10 +14,11 @@ import AppIcon from './AppIcon';
  * @param {Function} props.onChangeText - Se ejecuta al cambiar el texto
  * @param {string} [props.placeholder] - Texto de ayuda
  * @param {boolean} [props.autoFocus] - Enfoca el campo al mostrarse
+ * @param {Object} [props.style] - Estilos adicionales del contenedor (por ejemplo, márgenes)
  * @returns {React.JSX.Element} Barra de búsqueda
  */
-const SearchBar = ({ value, onChangeText, placeholder = 'Buscar', autoFocus = false }) => (
-  <View style={styles.wrapper}>
+const SearchBar = ({ value, onChangeText, placeholder = 'Buscar', autoFocus = false, style }) => (
+  <View style={[styles.wrapper, style]}>
     <AppIcon name="search" size={18} color={colors.aqua} />
     <TextInput
       style={styles.input}

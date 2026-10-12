@@ -23,12 +23,28 @@ API_BASE_URL=https://mi-servidor/api/v1 npm run build:web
 
 El backend acepta cualquier origen por defecto. En producción defina `CORS_ALLOWED_ORIGINS` en el backend con la URL de esta app.
 
+## Diseño mobile first
+
+La interfaz se diseña primero para el celular y se adapta al crecer la pantalla (`src/theme/layout.js`):
+
+| Ancho | Navegación | Contenido |
+|---|---|---|
+| Menos de 600 px (celular) | Barra inferior | Una columna a todo el ancho |
+| 600 a 1023 px (tableta) | Barra inferior | Centrado (máx. 840 px); listas en 2 columnas; accesos del inicio en 4 |
+| 1024 px o más (computador) | Menú lateral (web) | Centrado (máx. 1200 px); listas en hasta 3 columnas; mapa con panel lateral |
+
+`useLayout()` da el tamaño actual, `ResponsiveList` reparte las tarjetas en columnas y `ScreenContainer`/`ScreenHeader` alinean el contenido. Los botones táctiles miden al menos 44 px.
+
+## Horario y clases propias
+
+En **Académico → Horario** el estudiante ve juntas sus asignaturas matriculadas y las clases que él mismo registra con **Agregar clase** (nombre, docente, aula, días y horas). Las propias llevan la etiqueta "Mi clase" y se editan o borran con el lápiz. Se validan igual que en el backend (horas HH:MM, fin después del inicio, al menos un día) y el servidor rechaza cruces con otra clase del horario. Guardar necesita conexión; el horario completo se guarda en el dispositivo y se sigue viendo sin internet. Al cerrar sesión se borran todas las copias locales.
+
 ## Mapa del campus
 
-La pestaña **Campus → Mapa** muestra **un solo mapa de todo el campus**: el plano general con la planta baja de cada bloque en su posición real y, encima, los salones. Usa Leaflet (`L.CRS.Simple`, sin GPS ni teselas) dentro de un WebView y funciona **sin conexión**: Leaflet va incrustado en el HTML (`npm install` lo genera con `scripts/build-campus-map.js`; también `npm run build:map`) y el plano del campus (imagen, salones y malla de caminos) se guarda en el dispositivo. Solo se vuelve a descargar cuando cambia su `actualizadoEn`.
+La pestaña **Campus** abre directamente **un solo mapa de todo el campus**: un fondo vectorial (el lote y el contorno de cada bloque) y, encima, solo los espacios a los que entran estudiantes y docentes. La búsqueda por nombre o código es secundaria: un botón **Buscar** sobre el mapa en el celular y un panel lateral en pantallas anchas. Usa Leaflet (`L.CRS.Simple`, sin GPS ni teselas) dentro de un WebView y funciona **sin conexión**: Leaflet va incrustado en el HTML (`npm install` lo genera con `scripts/build-campus-map.js`; también `npm run build:map`) y el plano del campus (imagen, salones y malla de caminos) se guarda en el dispositivo. Solo se vuelve a descargar cuando cambia su `actualizadoEn`.
 
 - **Pisos:** los salones de cada piso son una capa; el selector de piso está en la esquina del mapa.
-- **Iluminación:** el estudiante busca un salón por nombre o código (búsqueda local) o pulsa **Ver en el mapa** en el detalle de un espacio. La app envía el UUID al mapa (`injectJavaScript` → `window.highlightSpace(uuid)`), que cambia al piso del salón, lo ilumina y centra la vista.
+- **Iluminación:** el estudiante busca un salón por nombre o código (búsqueda local) o pulsa **Ver en mapa** en una clase del horario o en la próxima clase del inicio. La app envía el UUID al mapa (`injectJavaScript` → `window.highlightSpace(uuid)`), que cambia al piso del salón, lo ilumina y centra la vista.
 - **Caminos:** con el salón elegido, **Cómo llegar desde** ofrece las entradas del campus o **Tocar el mapa** para marcar dónde está el estudiante. El mapa calcula la ruta con A* sobre una malla caminable de 0,5 m (exteriores y pasillos; los salones son obstáculos), la dibuja y la app muestra minutos, metros y, si el salón no está en el piso 1, a qué piso subir.
 
 En web, el mismo HTML va en un `iframe` y la app usa `postMessage` (`CampusMapView.web.jsx`).
