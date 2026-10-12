@@ -6,7 +6,11 @@ import { APP_MESSAGE_SOURCE, buildMapHtml, parseMapMessage } from './buildMapHtm
 /**
  * @description Versión web de CampusMapView: react-native-webview no funciona en el navegador, así que
  *              el mismo HTML del mapa se muestra en un iframe (srcdoc) y la app le envía el UUID con
- *              postMessage. Tiene la misma interfaz que la versión móvil.
+ *              postMessage. Tiene la misma interfaz que la versión móvil. El iframe lleva
+ *              allow-same-origin: sin él, Chrome lo ejecuta en otro proceso y en el modo celular de
+ *              las herramientas de desarrollo los toques llegan desplazados (no funcionan los pisos,
+ *              el zoom ni arrastrar el mapa). El HTML es propio: los datos del plano van escapados y
+ *              los nombres se insertan como texto, nunca como HTML.
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @param {Object} props - Propiedades del componente (ver CampusMapView.jsx)
  * @param {React.Ref} ref - Expone highlight(uuid), clear() y fit()
@@ -92,7 +96,7 @@ const CampusMapView = forwardRef(
           ref={frameRef}
           title={`Plano ${plan.nombre || ''}`}
           srcDoc={html}
-          sandbox="allow-scripts"
+          sandbox="allow-scripts allow-same-origin"
           style={frameStyle}
         />
       </View>
