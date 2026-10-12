@@ -4,8 +4,8 @@ import colors from '../../theme/colors';
 import { fontSizes, radius, spacing } from '../../theme/typography';
 import AppIcon from './AppIcon';
 
-const SearchBar = ({ value, onChangeText, placeholder = 'Buscar', autoFocus = false }) => (
-  <View style={styles.wrapper}>
+const SearchBar = ({ value, onChangeText, placeholder = 'Buscar', autoFocus = false, style }) => (
+  <View style={[styles.wrapper, style]}>
     <AppIcon name="search" size={18} color={colors.aqua} />
     <TextInput
       style={styles.input}

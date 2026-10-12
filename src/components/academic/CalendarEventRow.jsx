@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import colors from '../../theme/colors';
+import { useCardGutter } from '../../theme/layout';
 import { cardShadow, fontSizes, radius, spacing } from '../../theme/typography';
 import { categoryLabel } from '../../utils/category.utils';
 import { formatLongDate, getDateBlock } from '../../utils/date.utils';
@@ -9,9 +10,10 @@ import AppBadge from '../common/AppBadge';
 const CalendarEventRow = ({ event, highlighted = false }) => {
   const block = getDateBlock(event.fechaInicio);
   const hasRange = event.fechaFin && event.fechaFin !== event.fechaInicio;
+  const gutter = useCardGutter();
 
   return (
-    <View style={[styles.row, highlighted ? styles.rowHighlighted : null]}>
+    <View style={[styles.row, { marginHorizontal: gutter }, highlighted ? styles.rowHighlighted : null]}>
       <View style={styles.dateBlock}>
         <Text style={styles.day}>{block.day}</Text>
         <Text style={styles.month}>{block.month}</Text>

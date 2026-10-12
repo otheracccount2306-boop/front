@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import colors from '../../theme/colors';
+import { useCardGutter } from '../../theme/layout';
 import { fontSizes, spacing } from '../../theme/typography';
 import { categoryIcon } from '../../utils/category.utils';
 import { getContactAction, openContact } from '../../utils/contact.utils';
@@ -10,11 +11,12 @@ import AppCard from '../common/AppCard';
 import AppIcon from '../common/AppIcon';
 
 const ServiceRow = ({ service }) => {
+  const gutter = useCardGutter();
   const open = isOpenNow(service.horario);
   const contact = getContactAction(service.contacto);
 
   return (
-    <AppCard style={styles.card}>
+    <AppCard style={[styles.card, { marginHorizontal: gutter }]}>
       <View style={styles.icon}>
         <AppIcon name={categoryIcon(service.categoria)} size={22} color={colors.primary} />
       </View>

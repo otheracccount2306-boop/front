@@ -6,12 +6,6 @@ export const TAB_ITEMS = [
   { name: 'NoticiasTab', label: 'Noticias', icon: 'newspaper-outline' },
 ];
 
-export const CAMPUS_MODULE_TABS = [
-  { name: 'CampusSpaces', label: 'Espacios' },
-  { name: 'CampusSearch', label: 'Buscar' },
-  { name: 'CampusMap', label: 'Mapa' },
-];
+export { SIDEBAR_WIDTH } from '../theme/layout';
 
-export const SIDEBAR_WIDTH = 220;
-
-export const SIDEBAR_MIN_WIDTH = 900;
+export { SIDEBAR_MIN_WIDTH } from '../theme/layout';

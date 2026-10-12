@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import AppLoader from '../../components/common/AppLoader';
 import CategoryChips from '../../components/common/CategoryChips';
 import EmptyState from '../../components/common/EmptyState';
@@ -7,6 +7,7 @@ import ErrorBanner from '../../components/common/ErrorBanner';
 import ScreenContainer from '../../components/common/ScreenContainer';
 import ScreenHeader from '../../components/common/ScreenHeader';
 import SegmentedTabs from '../../components/common/SegmentedTabs';
+import ResponsiveList from '../../components/common/ResponsiveList';
 import ServiceRow from '../../components/services/ServiceRow';
 import useServices from '../../hooks/useServices';
 import colors from '../../theme/colors';
@@ -35,7 +36,7 @@ const WellbeingScreen = ({ navigation }) => {
       {loading ? (
         <AppLoader fill />
       ) : (
-        <FlatList
+        <ResponsiveList
           data={services}
           keyExtractor={(service) => service.id}
           renderItem={({ item }) => <ServiceRow service={item} />}

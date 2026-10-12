@@ -4,11 +4,10 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AppIcon from '../components/common/AppIcon';
 import CalendarScreen from '../screens/academic/CalendarScreen';
+import PersonalClassFormScreen from '../screens/academic/PersonalClassFormScreen';
 import ScheduleScreen from '../screens/academic/ScheduleScreen';
 import ProfileScreen from '../screens/auth/ProfileScreen';
 import CampusMapScreen from '../screens/campus/CampusMapScreen';
-import CampusSearchScreen from '../screens/campus/CampusSearchScreen';
-import CampusSpacesScreen from '../screens/campus/CampusSpacesScreen';
 import DashboardScreen from '../screens/dashboard/DashboardScreen';
 import NewsDetailScreen from '../screens/news/NewsDetailScreen';
 import EventsScreen from '../screens/news/EventsScreen';
@@ -41,6 +40,7 @@ const AcademicNavigator = () => (
   <AcademicStack.Navigator screenOptions={stackOptions}>
     <AcademicStack.Screen name="Schedule" component={ScheduleScreen} />
     <AcademicStack.Screen name="Calendar" component={CalendarScreen} />
+    <AcademicStack.Screen name="PersonalClassForm" component={PersonalClassFormScreen} />
   </AcademicStack.Navigator>
 );
 
@@ -54,8 +54,6 @@ const ServicesNavigator = () => (
 
 const CampusNavigator = () => (
   <CampusStack.Navigator screenOptions={stackOptions}>
-    <CampusStack.Screen name="CampusSpaces" component={CampusSpacesScreen} />
-    <CampusStack.Screen name="CampusSearch" component={CampusSearchScreen} />
     <CampusStack.Screen name="CampusMap" component={CampusMapScreen} />
   </CampusStack.Navigator>
 );

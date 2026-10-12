@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import AppLoader from '../../components/common/AppLoader';
 import EmptyState from '../../components/common/EmptyState';
 import ErrorBanner from '../../components/common/ErrorBanner';
@@ -7,6 +7,7 @@ import ScreenContainer from '../../components/common/ScreenContainer';
 import ScreenHeader from '../../components/common/ScreenHeader';
 import SearchBar from '../../components/common/SearchBar';
 import SegmentedTabs from '../../components/common/SegmentedTabs';
+import ResponsiveList from '../../components/common/ResponsiveList';
 import ServiceRow from '../../components/services/ServiceRow';
 import useDirectory from '../../hooks/useDirectory';
 import colors from '../../theme/colors';
@@ -36,7 +37,7 @@ const DirectoryScreen = ({ navigation }) => {
       {loading ? (
         <AppLoader fill />
       ) : (
-        <FlatList
+        <ResponsiveList
           data={departments}
           keyExtractor={(department) => department.id}
           renderItem={({ item }) => <ServiceRow service={item} />}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 import CalendarEventRow from '../../components/academic/CalendarEventRow';
 import AppLoader from '../../components/common/AppLoader';
 import CategoryChips from '../../components/common/CategoryChips';
@@ -8,6 +8,7 @@ import ErrorBanner from '../../components/common/ErrorBanner';
 import ScreenContainer from '../../components/common/ScreenContainer';
 import ScreenHeader from '../../components/common/ScreenHeader';
 import SegmentedTabs from '../../components/common/SegmentedTabs';
+import ResponsiveList from '../../components/common/ResponsiveList';
 import useCalendar from '../../hooks/useCalendar';
 import colors from '../../theme/colors';
 import { spacing } from '../../theme/typography';
@@ -37,7 +38,7 @@ const CalendarScreen = ({ navigation }) => {
       {loading ? (
         <AppLoader fill />
       ) : (
-        <FlatList
+        <ResponsiveList
           data={events}
           keyExtractor={(event) => event.id}
           renderItem={({ item }) => (

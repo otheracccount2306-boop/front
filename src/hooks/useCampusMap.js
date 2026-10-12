@@ -6,7 +6,7 @@ import { matchesTerm } from '../utils/text.utils';
 import useCachedResource from './useCachedResource';
 
 const MIN_SEARCH_LENGTH = 2;
-const MAX_RESULTS = 6;
+const MAX_RESULTS = 8;
 
 const fetchPlans = () => getPlans();
 
@@ -67,12 +67,16 @@ export const usePlanDetail = (planId, updatedAt) => {
   return state;
 };
 
-export const useMappedSpaceSearch = (spaces, query) =>
+export const useCampusSpaceSearch = (spaces, query) =>
   useMemo(() => {
     if (query.trim().length < MIN_SEARCH_LENGTH) {
       return [];
     }
-    return spaces
-      .filter((space) => space.planoId && space.geometria && matchesTerm(space, ['nombre', 'codigo'], query))
-      .slice(0, MAX_RESULTS);
+    const matches = spaces
+      .filter((space) => matchesTerm(space, ['nombre', 'codigo'], query))
+      .map((space) => ({ ...space, ubicado: Boolean(space.planoId && space.geometria) }));
+    return [...matches.filter((space) => space.ubicado), ...matches.filter((space) => !space.ubicado)].slice(
+      0,
+      MAX_RESULTS,
+    );
   }, [spaces, query]);
