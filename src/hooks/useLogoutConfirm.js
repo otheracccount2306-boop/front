@@ -2,13 +2,13 @@ import { useCallback, useState } from 'react';
 import useAuth from './useAuth';
 
 /**
- * @description Hook del cierre de sesión del administrador con diálogo de confirmación. Lo usan el
- *              menú lateral, el menú móvil y el encabezado del dashboard.
+ * @description Hook del cierre de sesión con diálogo de confirmación. Lo usan los menús del
+ *              estudiante y del administrador (lateral y móvil) y el encabezado del panel.
  * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
  * @returns {{ visible: boolean, loading: boolean, open: Function, close: Function, confirm: Function }}
  *          Estado del diálogo y funciones para abrirlo, cerrarlo y confirmar el cierre de sesión
  */
-const useAdminLogout = () => {
+const useLogoutConfirm = () => {
   const { logout } = useAuth();
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -23,4 +23,4 @@ const useAdminLogout = () => {
   return { visible, loading, open, close, confirm };
 };
 
-export default useAdminLogout;
+export default useLogoutConfirm;

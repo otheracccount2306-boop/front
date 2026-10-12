@@ -29,9 +29,11 @@ La interfaz se diseña primero para el celular y se adapta al crecer la pantalla
 
 | Ancho | Navegación | Contenido |
 |---|---|---|
-| Menos de 600 px (celular) | Barra inferior | Una columna a todo el ancho |
-| 600 a 1023 px (tableta) | Barra inferior | Centrado (máx. 840 px); listas en 2 columnas; accesos del inicio en 4 |
+| Menos de 600 px (celular) | Menú de hamburguesa | Una columna a todo el ancho |
+| 600 a 1023 px (tableta) | Menú de hamburguesa | Centrado (máx. 840 px); listas en 2 columnas; accesos del inicio en 4 |
 | 1024 px o más (computador) | Menú lateral (web) | Centrado (máx. 1200 px); listas en hasta 3 columnas; mapa con panel lateral |
+
+La app del estudiante se maneja igual que el panel administrativo: el botón de hamburguesa del encabezado abre un cajón con las cinco secciones, **Mi perfil** y **Cerrar sesión** (con confirmación; al salir se borra la copia local de los datos). En web ancha el mismo menú queda fijo a la izquierda (`StudentMenu`, `StudentDrawer`, `WebSidebar`). No hay barra inferior.
 
 `useLayout()` da el tamaño actual, `ResponsiveList` reparte las tarjetas en columnas y `ScreenContainer`/`ScreenHeader` alinean el contenido. Los botones táctiles miden al menos 44 px.
 
@@ -41,11 +43,11 @@ En **Académico → Horario** el estudiante ve juntas sus asignaturas matriculad
 
 ## Mapa del campus
 
-La pestaña **Campus** abre directamente **un solo mapa de todo el campus**: un fondo vectorial (el lote y el contorno de cada bloque) y, encima, solo los espacios a los que entran estudiantes y docentes. La búsqueda por nombre o código es secundaria: un botón **Buscar** sobre el mapa en el celular y un panel lateral en pantallas anchas. Usa Leaflet (`L.CRS.Simple`, sin GPS ni teselas) dentro de un WebView y funciona **sin conexión**: Leaflet va incrustado en el HTML (`npm install` lo genera con `scripts/build-campus-map.js`; también `npm run build:map`) y el plano del campus (imagen, salones y malla de caminos) se guarda en el dispositivo. Solo se vuelve a descargar cuando cambia su `actualizadoEn`.
+La pestaña **Campus** abre directamente **un solo mapa de todo el campus**: un fondo vectorial (el lote y el contorno de cada bloque) y, encima, solo los espacios a los que entran estudiantes y docentes. La búsqueda por nombre o código es secundaria: un botón **Buscar** sobre el mapa en el celular y un panel lateral en pantallas anchas. Usa Leaflet (`L.CRS.Simple`, sin GPS ni teselas) dentro de un WebView y funciona **sin conexión**: Leaflet va incrustado en el HTML (`npm install` lo genera con `scripts/build-campus-map.js`; también `npm run build:map`) y el plano del campus (salones, fondo y mallas de caminos) se guarda en el dispositivo. El fondo es el plano general en gris claro (árboles, zonas verdes, parqueaderos, vías) bajo el contorno de los bloques. El mapa espera a que su contenedor tenga tamaño antes de iniciarse, así que también carga bien en el celular. Solo se vuelve a descargar cuando cambia su `actualizadoEn`.
 
 - **Pisos:** los salones de cada piso son una capa; el selector de piso está en la esquina del mapa.
 - **Iluminación:** el estudiante busca un salón por nombre o código (búsqueda local) o pulsa **Ver en mapa** en una clase del horario o en la próxima clase del inicio. La app envía el UUID al mapa (`injectJavaScript` → `window.highlightSpace(uuid)`), que cambia al piso del salón, lo ilumina y centra la vista.
-- **Caminos:** con el salón elegido, **Cómo llegar desde** ofrece las entradas del campus o **Tocar el mapa** para marcar dónde está el estudiante. El mapa calcula la ruta con A* sobre una malla caminable de 0,5 m (exteriores y pasillos; los salones son obstáculos), la dibuja y la app muestra minutos, metros y, si el salón no está en el piso 1, a qué piso subir.
+- **Caminos:** con el salón elegido, **Cómo llegar desde** ofrece las entradas del campus (la principal, sobre la Troncal del Caribe; la portería sur y el acceso a la zona deportiva) o **Tocar el mapa** para marcar dónde está el estudiante. El mapa calcula la ruta con A* sobre una malla caminable por piso de 0,3 m sacada de los muros, columnas y ventanas de los DWG, así que el camino no atraviesa paredes. Los pisos solo se unen por las escaleras y ascensores detectados en los planos: la ruta sube por ellos, marca cada escalera en el mapa ("Sube al piso N por la escalera") y los tramos de otros pisos se ven punteados. La app muestra minutos (contando el tiempo de subir), metros y la escalera a usar. Si el plano no muestra un acceso a un salón, el camino llega lo más cerca posible y lo avisa.
 
 En web, el mismo HTML va en un `iframe` y la app usa `postMessage` (`CampusMapView.web.jsx`).
 
@@ -116,7 +118,7 @@ src/store                 auth.store.js y cache.store.js (Zustand)
 src/hooks                 lógica de datos por pantalla
 src/utils                 storage, fechas, validaciones, errores, debounce
 src/components            componentes propios (sin librerías de UI de terceros)
-src/navigation            Root / Auth / Main (barra inferior o menú lateral en web ancha)
+src/navigation            Root / Auth / Main (menú de hamburguesa o menú lateral en web ancha)
 src/screens               una carpeta por módulo
 ```
 
@@ -129,5 +131,5 @@ src/screens               una carpeta por módulo
 - **Contacto de servicios.** El backend solo tiene un campo libre `contacto`. La app detecta si es un correo (abre el cliente de correo) o un teléfono (abre el marcador).
 - **Horario Abierto/Cerrado.** Se calcula interpretando el texto libre del campo `horario` (por ejemplo "Lunes a Viernes 8:00 AM – 5:00 PM"). Si el texto no se puede interpretar, no se muestra la etiqueta.
 - **Sin pantalla de restablecer contraseña.** El flujo pide solo la pantalla de recuperación. En desarrollo el backend imprime el token en su consola, no envía correo, así que un usuario final todavía no puede completar el restablecimiento desde la app.
-- **Menú lateral en web.** Con ventanas de 900 puntos o más, la barra inferior se reemplaza por un menú lateral.
+- **Menú en lugar de barra inferior.** Como en el panel administrativo, la app del estudiante se navega con un menú de hamburguesa; desde 1024 puntos en web el menú queda fijo a la izquierda.
 - **Sin `Alert.alert`.** No funciona en react-native-web; el cierre de sesión usa un diálogo propio (`ConfirmDialog`).

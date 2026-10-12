@@ -2,7 +2,6 @@ import React from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import AppIcon from '../components/common/AppIcon';
 import CalendarScreen from '../screens/academic/CalendarScreen';
 import PersonalClassFormScreen from '../screens/academic/PersonalClassFormScreen';
 import ScheduleScreen from '../screens/academic/ScheduleScreen';
@@ -15,8 +14,6 @@ import NewsScreen from '../screens/news/NewsScreen';
 import DirectoryScreen from '../screens/services/DirectoryScreen';
 import FAQScreen from '../screens/services/FAQScreen';
 import WellbeingScreen from '../screens/services/WellbeingScreen';
-import colors from '../theme/colors';
-import { fontSizes } from '../theme/typography';
 import { SIDEBAR_MIN_WIDTH, SIDEBAR_WIDTH, TAB_ITEMS } from './tabItems';
 import WebSidebar from './WebSidebar';
 
@@ -68,7 +65,7 @@ const ServicesNavigator = () => (
 );
 
 /**
- * @description Pila de la pestaña Campus: Espacios, Búsqueda y Mapa.
+ * @description Pila de la pestaña Campus: el mapa (con la búsqueda por nombre como opción).
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @returns {React.JSX.Element} Pila de Campus
  */
@@ -100,12 +97,14 @@ const TAB_COMPONENTS = {
 };
 
 /**
- * @description Navegador principal con cinco pestañas (Inicio, Académico, Servicios, Campus y
- *              Noticias). En web con ventana ancha la barra inferior se reemplaza por un menú lateral.
+ * @description Navegador principal con cinco secciones (Inicio, Académico, Servicios, Campus y
+ *              Noticias). No hay barra inferior: en el celular y en ventanas angostas se navega con el
+ *              menú de hamburguesa del encabezado (ScreenHeader → StudentDrawer), igual que en el
+ *              panel del administrador; en web con ventana ancha el menú queda fijo a la izquierda.
  * @author Doris Arzuaga <doris.arzuaga@campusucc.edu.co>
  * @author Diego Luna <diego.luna@campusucc.edu.co>
  * @author Gabriela Zabaleta <gabriela.zabaleta@campusucc.edu.co>
- * @returns {React.JSX.Element} Navegador de pestañas
+ * @returns {React.JSX.Element} Navegador principal
  */
 const MainNavigator = () => {
   const { width } = useWindowDimensions();
@@ -114,26 +113,12 @@ const MainNavigator = () => {
   return (
     <Tab.Navigator
       initialRouteName="InicioTab"
-      tabBar={useSidebar ? (props) => <WebSidebar {...props} /> : undefined}
+      tabBar={useSidebar ? (props) => <WebSidebar {...props} /> : () => null}
       sceneContainerStyle={useSidebar ? { marginLeft: SIDEBAR_WIDTH } : undefined}
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.gray3,
-        tabBarLabelStyle: { fontSize: fontSizes.label, fontWeight: '600' },
-        tabBarStyle: { borderTopColor: colors.gray4, backgroundColor: colors.white },
-      }}
+      screenOptions={{ headerShown: false }}
     >
       {TAB_ITEMS.map((item) => (
-        <Tab.Screen
-          key={item.name}
-          name={item.name}
-          component={TAB_COMPONENTS[item.name]}
-          options={{
-            tabBarLabel: item.label,
-            tabBarIcon: ({ color, size }) => <AppIcon name={item.icon} size={size} color={color} />,
-          }}
-        />
+        <Tab.Screen key={item.name} name={item.name} component={TAB_COMPONENTS[item.name]} options={{ title: item.label }} />
       ))}
     </Tab.Navigator>
   );

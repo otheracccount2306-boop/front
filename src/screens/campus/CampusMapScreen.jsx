@@ -14,6 +14,7 @@ import colors from '../../theme/colors';
 import { useLayout } from '../../theme/layout';
 import { cardShadow, fontSizes, radius, spacing } from '../../theme/typography';
 import { ALL_VALUE, categoryLabel } from '../../utils/category.utils';
+import { routeSummary } from '../../utils/campusRoute.utils';
 
 const TAP_START = 'tap';
 
@@ -54,6 +55,7 @@ const CampusMapScreen = ({ navigation, route }) => {
   const [mapInfo, setMapInfo] = useState({ entradas: [], navegacion: false });
   const [start, setStart] = useState(null);
   const [routeInfo, setRouteInfo] = useState(null);
+  const summary = routeSummary(routeInfo);
   const [routing, setRouting] = useState(false);
   const mapRef = useRef(null);
 
@@ -295,14 +297,20 @@ const CampusMapScreen = ({ navigation, route }) => {
             <Text style={styles.routeHint}>Toca en el mapa el punto donde estás</Text>
           ) : null}
           {routing && start !== TAP_START ? <Text style={styles.routeHint}>Calculando el camino…</Text> : null}
-          {routeInfo ? (
-            <View style={styles.routeRow}>
-              <AppIcon name="footsteps-outline" size={18} color={colors.primary} />
-              <Text style={styles.routeText}>
-                {`${routeInfo.minutos} min caminando · ${routeInfo.distancia} m`}
-                {routeInfo.piso && routeInfo.piso !== '1' ? ` · Sube al piso ${routeInfo.piso}` : ''}
-              </Text>
-            </View>
+          {summary ? (
+            <>
+              <View style={styles.routeRow}>
+                <AppIcon name="footsteps-outline" size={18} color={colors.primary} />
+                <Text style={styles.routeText}>{summary.main}</Text>
+              </View>
+              {summary.steps ? (
+                <View style={styles.routeRow}>
+                  <AppIcon name="trending-up-outline" size={18} color={colors.primary} />
+                  <Text style={styles.routeStep}>{summary.steps}</Text>
+                </View>
+              ) : null}
+              {summary.note ? <Text style={styles.routeHint}>{summary.note}</Text> : null}
+            </>
           ) : null}
         </>
       ) : null}
@@ -637,6 +645,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: spacing.xs,
+  },
+  routeStep: {
+    flex: 1,
+    fontSize: fontSizes.small,
+    color: colors.gray1,
+    marginLeft: spacing.sm,
   },
   routeText: {
     flex: 1,

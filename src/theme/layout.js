@@ -16,7 +16,7 @@ export const BREAKPOINTS = {
 /** Ancho en puntos del menú lateral de la versión web. */
 export const SIDEBAR_WIDTH = 220;
 
-/** Desde este ancho la versión web cambia la barra inferior por el menú lateral. */
+/** Desde este ancho la versión web cambia el menú de hamburguesa por el menú lateral fijo. */
 export const SIDEBAR_MIN_WIDTH = BREAKPOINTS.expanded;
 
 /** Ancho máximo del contenido según el tamaño de pantalla; en el celular ocupa todo el ancho. */
