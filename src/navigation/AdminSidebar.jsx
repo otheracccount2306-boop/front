@@ -2,13 +2,13 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import AdminMenu from '../components/admin/AdminMenu';
 import ConfirmDialog from '../components/common/ConfirmDialog';
-import useAdminLogout from '../hooks/useAdminLogout';
+import useLogoutConfirm from '../hooks/useLogoutConfirm';
 import colors from '../theme/colors';
 import { spacing } from '../theme/typography';
 import { SIDEBAR_WIDTH } from './tabItems';
 
 const AdminSidebar = ({ state, navigation }) => {
-  const logout = useAdminLogout();
+  const logout = useLogoutConfirm();
   const active = state.routes[state.index].name;
 
   return (

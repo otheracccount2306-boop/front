@@ -12,7 +12,7 @@ import AdminHeader from '../../components/admin/AdminHeader';
 import AppIcon from '../../components/common/AppIcon';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import ScreenContainer from '../../components/common/ScreenContainer';
-import useAdminLogout from '../../hooks/useAdminLogout';
+import useLogoutConfirm from '../../hooks/useLogoutConfirm';
 import useAuth from '../../hooks/useAuth';
 import useFocusRefresh from '../../hooks/useFocusRefresh';
 import colors from '../../theme/colors';
@@ -45,7 +45,7 @@ const COUNTERS = {
 
 const AdminDashboardScreen = () => {
   const { user } = useAuth();
-  const logout = useAdminLogout();
+  const logout = useLogoutConfirm();
   const [values, setValues] = useState({});
   const [refreshing, setRefreshing] = useState(false);
 

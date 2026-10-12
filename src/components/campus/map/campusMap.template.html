@@ -136,6 +136,25 @@
       .route-pin.end div {
         background: var(--accent, #f5a623);
       }
+      .route-pin.stairs div {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        background: var(--primary, #007760);
+      }
+      .leaflet-tooltip.route-step {
+        background: var(--primary, #007760);
+        border: 0;
+        border-radius: 6px;
+        color: var(--white, #fff);
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 7px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      }
+      .leaflet-tooltip.route-step::before {
+        display: none;
+      }
       .map-banner {
         position: absolute;
         left: 12px;
@@ -198,6 +217,7 @@
         var picking = null;
         var banner = document.getElementById('banner');
 
+
         function send(type, payload) {
           var text = JSON.stringify({ source: SOURCE_MAP, type: type, payload: payload || {} });
           if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
@@ -245,6 +265,7 @@
           banner.textContent = text || '';
           banner.className = text ? 'map-banner visible' : 'map-banner';
         }
+
 
         function categoryColor(categoria) {
           return (
@@ -312,6 +333,7 @@
           }
         }
 
+
         window.showFloor = function (piso) {
           piso = String(piso);
           if (!ready || floors.indexOf(piso) < 0) {
@@ -334,6 +356,7 @@
             floorButtons[key].className = key === piso ? 'active' : '';
           });
           if (routeLayer) {
+            styleRoute();
             routeLayer.bringToFront();
           }
           send('floor', { piso: piso });
@@ -370,6 +393,7 @@
           });
           map.addControl(new FloorControl());
         }
+
 
         window.highlightSpace = function (id, options) {
           var spaceId = String(id || '').trim().toLowerCase();
@@ -419,22 +443,65 @@
           }
         };
 
-        function decodeGrid(navegacion) {
-          var w = navegacion.ancho;
-          var h = navegacion.alto;
-          var cells = new Uint8Array(w * h);
-          var runs = String(navegacion.malla).split(',');
+
+        var FLOOR_COST_M = 6;
+        var FLOOR_SECONDS = 15;
+
+        function decodeRle(text, n, base) {
+          var cells = new Uint8Array(n);
+          var runs = String(text).split(',');
           var value = 0;
           var index = 0;
           for (var i = 0; i < runs.length; i += 1) {
-            var count = parseInt(runs[i], 10) || 0;
+            var count = parseInt(runs[i], base) || 0;
             if (value) {
-              cells.fill(1, index, index + count);
+              cells.fill(1, index, Math.min(n, index + count));
             }
             index += count;
             value = 1 - value;
           }
-          return { w: w, h: h, cells: cells, size: navegacion.celdaPx, ppm: navegacion.pxPorMetro || 1 };
+          return cells;
+        }
+
+        function decodeNav(navegacion) {
+          var w = navegacion.ancho;
+          var h = navegacion.alto;
+          var n = w * h;
+          var out = {
+            w: w,
+            h: h,
+            n: n,
+            size: navegacion.celdaPx,
+            ppm: navegacion.pxPorMetro || 1,
+            floors: {},
+            links: {},
+            entradas: navegacion.entradas || [],
+            pisoNav: navegacion.pisoNav || {},
+          };
+          if (navegacion.version === 2 && navegacion.pisos) {
+            Object.keys(navegacion.pisos).forEach(function (piso) {
+              out.floors[piso] = decodeRle(navegacion.pisos[piso], n, 36);
+            });
+            (navegacion.escaleras || []).forEach(function (link) {
+              var a = String(link[0]) + ':' + link[1];
+              var b = String(link[2]) + ':' + link[3];
+              (out.links[a] = out.links[a] || []).push({ piso: String(link[2]), k: link[3] });
+              (out.links[b] = out.links[b] || []).push({ piso: String(link[0]), k: link[1] });
+            });
+          } else if (navegacion.malla) {
+            out.floors['1'] = decodeRle(navegacion.malla, n, 10);
+            out.single = true;
+          }
+          return out;
+        }
+
+        function navFloorOf(space) {
+          if (nav.single) {
+            return '1';
+          }
+          var key = (space.edificio || '') + '|' + (space.piso || '1');
+          var piso = nav.pisoNav[key] || String(space.piso || '1');
+          return nav.floors[piso] ? piso : '1';
         }
 
         function cellOf(x, y) {
@@ -461,7 +528,8 @@
           return inside;
         }
 
-        function targetCells(space, ring) {
+        function targetCells(space, piso, ring) {
+          var cells = nav.floors[piso];
           var coords = space.geometria.coordinates[0];
           var minx = Infinity;
           var miny = Infinity;
@@ -475,61 +543,76 @@
           });
           var a = cellOf(minx, miny);
           var b = cellOf(maxx, maxy);
-          var target = new Uint8Array(nav.w * nav.h);
-          var frontier = [];
+          var inside = [];
           for (var j = Math.max(0, a.j); j <= Math.min(nav.h - 1, b.j); j += 1) {
             for (var i = Math.max(0, a.i); i <= Math.min(nav.w - 1, b.i); i += 1) {
               var c = centerOf(j * nav.w + i);
               if (pointInRing(c[0], c[1], coords)) {
-                target[j * nav.w + i] = 1;
-                frontier.push(j * nav.w + i);
+                inside.push(j * nav.w + i);
               }
             }
           }
-          if (!frontier.length) {
-            var center = cellOf((minx + maxx) / 2, (miny + maxy) / 2);
-            var k = center.j * nav.w + center.i;
-            target[k] = 1;
-            frontier.push(k);
-          }
-          for (var step = 0; step < ring; step += 1) {
-            var next = [];
+          var set = {};
+          var count = 0;
+          if (!ring) {
+            inside.forEach(function (k) {
+              if (cells[k]) {
+                set[k] = 1;
+                count += 1;
+              }
+            });
+          } else {
+            var seen = {};
+            var frontier = inside.length ? inside : [cellOf((minx + maxx) / 2, (miny + maxy) / 2)].map(function (p) {
+              return p.j * nav.w + p.i;
+            });
             frontier.forEach(function (k) {
-              var i = k % nav.w;
-              var j = Math.floor(k / nav.w);
-              [
-                [1, 0],
-                [-1, 0],
-                [0, 1],
-                [0, -1],
-              ].forEach(function (d) {
-                var ni = i + d[0];
-                var nj = j + d[1];
-                if (ni >= 0 && nj >= 0 && ni < nav.w && nj < nav.h) {
+              seen[k] = 1;
+            });
+            for (var step = 0; step < ring; step += 1) {
+              var next = [];
+              for (var f = 0; f < frontier.length; f += 1) {
+                var k0 = frontier[f];
+                var i0 = k0 % nav.w;
+                var j0 = (k0 - i0) / nav.w;
+                for (var d = 0; d < 4; d += 1) {
+                  var ni = i0 + (d === 0 ? 1 : d === 1 ? -1 : 0);
+                  var nj = j0 + (d === 2 ? 1 : d === 3 ? -1 : 0);
+                  if (ni < 0 || nj < 0 || ni >= nav.w || nj >= nav.h) {
+                    continue;
+                  }
                   var nk = nj * nav.w + ni;
-                  if (!target[nk]) {
-                    target[nk] = 1;
+                  if (!seen[nk]) {
+                    seen[nk] = 1;
                     next.push(nk);
+                    if (cells[nk]) {
+                      set[nk] = 1;
+                      count += 1;
+                    }
                   }
                 }
-              });
-            });
-            frontier = next;
+              }
+              frontier = next;
+            }
           }
-          return { cells: target, box: [a.i - ring, a.j - ring, b.i + ring, b.j + ring] };
+          return { piso: piso, set: set, count: count, box: [a.i - ring, a.j - ring, b.i + ring, b.j + ring] };
         }
 
-        function nearestWalkable(start) {
+        function nearestWalkable(piso, start, radiusCells) {
+          var cells = nav.floors[piso];
+          if (!cells) {
+            return -1;
+          }
           var startK = start.j * nav.w + start.i;
-          if (start.i >= 0 && start.j >= 0 && start.i < nav.w && start.j < nav.h && nav.cells[startK]) {
+          if (start.i >= 0 && start.j >= 0 && start.i < nav.w && start.j < nav.h && cells[startK]) {
             return startK;
           }
           var best = -1;
           var bestD = Infinity;
-          var radius = 80;
+          var radius = radiusCells || 130;
           for (var j = Math.max(0, start.j - radius); j <= Math.min(nav.h - 1, start.j + radius); j += 1) {
             for (var i = Math.max(0, start.i - radius); i <= Math.min(nav.w - 1, start.i + radius); i += 1) {
-              if (nav.cells[j * nav.w + i]) {
+              if (cells[j * nav.w + i]) {
                 var d = (i - start.i) * (i - start.i) + (j - start.j) * (j - start.j);
                 if (d < bestD) {
                   bestD = d;
@@ -592,27 +675,45 @@
           return top;
         };
 
-        function astar(startK, target) {
+        function astar(startPiso, startK, target) {
           var w = nav.w;
           var h = nav.h;
-          var n = w * h;
-          var g = new Float32Array(n).fill(Infinity);
-          var came = new Int32Array(n).fill(-1);
-          var closed = new Uint8Array(n);
+          var n = nav.n;
+          var floorCost = FLOOR_COST_M * nav.ppm / nav.size;
+          var keys = Object.keys(nav.floors);
+          var index = {};
+          keys.forEach(function (key, i) {
+            index[key] = i;
+          });
+          var data = {};
+          function arrays(piso) {
+            if (!data[piso]) {
+              data[piso] = {
+                g: new Float32Array(n).fill(Infinity),
+                came: new Float64Array(n).fill(-1),
+                closed: new Uint8Array(n),
+              };
+            }
+            return data[piso];
+          }
+          var tf = target.piso;
           var bx0 = target.box[0];
           var by0 = target.box[1];
           var bx1 = target.box[2];
           var by1 = target.box[3];
-          function heuristic(k) {
+          function heuristic(piso, k) {
             var i = k % w;
             var j = (k - i) / w;
             var dx = i < bx0 ? bx0 - i : i > bx1 ? i - bx1 : 0;
             var dy = j < by0 ? by0 - j : j > by1 ? j - by1 : 0;
-            return Math.max(dx, dy) + 0.4142 * Math.min(dx, dy);
+            return Math.max(dx, dy) + 0.4142 * Math.min(dx, dy) + Math.abs(Number(piso) - Number(tf)) * floorCost;
+          }
+          function state(piso, k) {
+            return index[piso] * n + k;
           }
           var open = new Heap();
-          g[startK] = 0;
-          open.push(startK, heuristic(startK));
+          arrays(startPiso).g[startK] = 0;
+          open.push(state(startPiso, startK), heuristic(startPiso, startK));
           var dirs = [
             [1, 0, 1],
             [-1, 0, 1],
@@ -623,19 +724,31 @@
             [-1, 1, 1.4142],
             [-1, -1, 1.4142],
           ];
+          var guard = 0;
           while (open.keys.length) {
-            var k = open.pop();
-            if (closed[k]) {
+            guard += 1;
+            if (guard > 4000000) {
+              return null;
+            }
+            var s = open.pop();
+            var piso = keys[Math.floor(s / n)];
+            var k = s % n;
+            var A = arrays(piso);
+            if (A.closed[k]) {
               continue;
             }
-            closed[k] = 1;
-            if (target.cells[k]) {
+            A.closed[k] = 1;
+            if (piso === tf && target.set[k]) {
               var path = [];
-              for (var c = k; c !== -1; c = came[c]) {
-                path.push(c);
+              var cur = s;
+              while (cur !== -1) {
+                var cp = keys[Math.floor(cur / n)];
+                path.push({ piso: cp, k: cur % n });
+                cur = data[cp].came[cur % n];
               }
               return path.reverse();
             }
+            var cells = nav.floors[piso];
             var i = k % w;
             var j = (k - i) / w;
             for (var d = 0; d < 8; d += 1) {
@@ -645,28 +758,38 @@
                 continue;
               }
               var nk = nj * w + ni;
-              if (closed[nk] || !(nav.cells[nk] || target.cells[nk])) {
+              if (A.closed[nk] || !cells[nk]) {
                 continue;
               }
-              if (d >= 4 && !((nav.cells[j * w + ni] || target.cells[j * w + ni]) && (nav.cells[nj * w + i] || target.cells[nj * w + i]))) {
+              if (d >= 4 && !(cells[j * w + ni] && cells[nj * w + i])) {
                 continue;
               }
-              var cost = g[k] + dirs[d][2];
-              if (cost < g[nk]) {
-                g[nk] = cost;
-                came[nk] = k;
-                open.push(nk, cost + heuristic(nk));
+              var cost = A.g[k] + dirs[d][2];
+              if (cost < A.g[nk]) {
+                A.g[nk] = cost;
+                A.came[nk] = s;
+                open.push(state(piso, nk), cost + heuristic(piso, nk));
+              }
+            }
+            var links = nav.links[piso + ':' + k];
+            if (links) {
+              for (var l = 0; l < links.length; l += 1) {
+                var to = links[l];
+                var B = arrays(to.piso);
+                var c2 = A.g[k] + floorCost;
+                if (!B.closed[to.k] && c2 < B.g[to.k]) {
+                  B.g[to.k] = c2;
+                  B.came[to.k] = s;
+                  open.push(state(to.piso, to.k), c2 + heuristic(to.piso, to.k));
+                }
               }
             }
           }
           return null;
         }
 
-        function walkable(k, target) {
-          return nav.cells[k] || target.cells[k];
-        }
-
-        function lineOfSight(a, b, target) {
+        function lineOfSight(piso, a, b) {
+          var cells = nav.floors[piso];
           var x0 = a % nav.w;
           var y0 = Math.floor(a / nav.w);
           var x1 = b % nav.w;
@@ -675,21 +798,21 @@
           for (var s = 1; s < steps; s += 1) {
             var x = Math.round(x0 + ((x1 - x0) * s) / steps);
             var y = Math.round(y0 + ((y1 - y0) * s) / steps);
-            if (!walkable(y * nav.w + x, target)) {
+            if (!cells[y * nav.w + x]) {
               return false;
             }
           }
           return true;
         }
 
-        function smooth(path, target) {
+        function smooth(piso, path) {
           if (path.length < 3) {
             return path;
           }
           var out = [path[0]];
           var anchor = 0;
           for (var i = 2; i < path.length; i += 1) {
-            if (!lineOfSight(path[anchor], path[i], target)) {
+            if (!lineOfSight(piso, path[anchor], path[i])) {
               out.push(path[i - 1]);
               anchor = i - 1;
             }
@@ -698,11 +821,52 @@
           return out;
         }
 
-        function pin(latlng, kind) {
-          return L.marker(latlng, {
+        function segmentsOf(path) {
+          var segments = [];
+          var current = null;
+          path.forEach(function (step) {
+            if (!current || current.piso !== step.piso) {
+              current = { piso: step.piso, cells: [] };
+              segments.push(current);
+            }
+            current.cells.push(step.k);
+          });
+          return segments.map(function (segment) {
+            var cells = smooth(segment.piso, segment.cells);
+            var latlngs = cells.map(function (k) {
+              var c = centerOf(k);
+              return [c[1], c[0]];
+            });
+            var meters = 0;
+            for (var i = 1; i < latlngs.length; i += 1) {
+              var dx = latlngs[i][1] - latlngs[i - 1][1];
+              var dy = latlngs[i][0] - latlngs[i - 1][0];
+              meters += Math.sqrt(dx * dx + dy * dy) / nav.ppm;
+            }
+            return { piso: segment.piso, latlngs: latlngs, meters: meters };
+          });
+        }
+
+        function pin(latlng, kind, label) {
+          var marker = L.marker(latlng, {
             interactive: false,
             keyboard: false,
             icon: L.divIcon({ className: 'route-pin ' + kind, html: '<div></div>', iconSize: [0, 0] }),
+          });
+          if (label) {
+            marker.bindTooltip(textNode(label), { permanent: true, direction: 'right', className: 'route-step' });
+          }
+          return marker;
+        }
+
+        var routeSegments = [];
+
+        function styleRoute() {
+          routeSegments.forEach(function (item) {
+            var here = item.piso === currentFloor || nav.single;
+            item.halo.setStyle({ opacity: here ? 0.95 : 0 });
+            item.line.setStyle({ opacity: here ? 1 : 0.55, dashArray: here ? null : '6 8', weight: here ? 5 : 4 });
+            item.flow.setStyle({ opacity: here ? 0.9 : 0 });
           });
         }
 
@@ -711,13 +875,14 @@
             map.removeLayer(routeLayer);
             routeLayer = null;
           }
+          routeSegments = [];
           picking = null;
           showBanner('');
         };
 
         function resolveStart(start) {
           if (start && typeof start === 'object' && isFinite(start.x) && isFinite(start.y)) {
-            return { x: Number(start.x), y: Number(start.y), nombre: 'Tu ubicación' };
+            return { x: Number(start.x), y: Number(start.y), nombre: 'Tu ubicación', piso: currentFloor };
           }
           var entradas = (nav && nav.entradas) || [];
           for (var i = 0; i < entradas.length; i += 1) {
@@ -735,59 +900,91 @@
             send('routeError', { id: spaceId, message: 'No hay un punto de partida para calcular el camino.' });
             return;
           }
-          var startK = nearestWalkable(cellOf(origin.x, origin.y));
+          var startPiso = '1';
+          var startK = -1;
+          if (origin.piso && nav.floors[String(origin.piso)] && !nav.single) {
+            startK = nearestWalkable(String(origin.piso), cellOf(origin.x, origin.y), 8);
+            startPiso = String(origin.piso);
+          }
+          if (startK < 0) {
+            startPiso = '1';
+            startK = nearestWalkable('1', cellOf(origin.x, origin.y));
+          }
           if (startK < 0) {
             send('routeError', { id: spaceId, message: 'Ese punto está fuera del campus.' });
             return;
           }
+          var piso = navFloorOf(entry.space);
           var path = null;
-          var target = null;
-          [3, 6, 12].some(function (ring) {
-            target = targetCells(entry.space, ring);
-            path = astar(startK, target);
+          var approx = false;
+          [0, 4, 8, 16].some(function (ring) {
+            var target = targetCells(entry.space, piso, ring);
+            if (!target.count) {
+              return false;
+            }
+            path = astar(startPiso, startK, target);
+            approx = ring > 0;
             return Boolean(path);
           });
+          if (!path && piso !== '1') {
+            var below = targetCells(entry.space, '1', 20);
+            if (below.count) {
+              path = astar(startPiso, startK, below);
+              approx = true;
+            }
+          }
           if (!path) {
             send('routeError', { id: spaceId, message: 'No encontramos un camino hasta ese salón.' });
             return;
           }
-          var simple = smooth(path, target);
-          var latlngs = simple.map(function (k) {
-            var c = centerOf(k);
-            return [c[1], c[0]];
-          });
-          latlngs.unshift([origin.y, origin.x]);
-          var center = entry.layer.getBounds().getCenter();
-          latlngs.push([center.lat, center.lng]);
-
+          var segments = segmentsOf(path);
+          segments[0].latlngs.unshift([origin.y, origin.x]);
           var meters = 0;
-          for (var i = 1; i < latlngs.length; i += 1) {
-            var dx = latlngs[i][1] - latlngs[i - 1][1];
-            var dy = latlngs[i][0] - latlngs[i - 1][0];
-            meters += Math.sqrt(dx * dx + dy * dy) / nav.ppm;
-          }
+          var changes = 0;
+          var layers = [];
+          routeSegments = [];
+          segments.forEach(function (segment, index) {
+            meters += segment.meters;
+            var halo = L.polyline(segment.latlngs, { color: '#ffffff', weight: 9, opacity: 0.95, interactive: false });
+            var line = L.polyline(segment.latlngs, { color: '#2f6fde', weight: 5, opacity: 1, interactive: false });
+            var flow = L.polyline(segment.latlngs, {
+              color: '#ffffff',
+              weight: 3,
+              opacity: 0.9,
+              interactive: false,
+              className: 'route-line',
+            });
+            routeSegments.push({ piso: segment.piso, halo: halo, line: line, flow: flow });
+            layers.push(halo, line, flow);
+            if (index > 0) {
+              changes += 1;
+              var up = Number(segment.piso) > Number(segments[index - 1].piso);
+              layers.push(
+                pin(segment.latlngs[0], 'stairs', (up ? 'Sube al piso ' : 'Baja al piso ') + segment.piso + ' por la escalera'),
+              );
+            }
+          });
+          var last = segments[segments.length - 1].latlngs;
+          layers.unshift(pin(segments[0].latlngs[0], 'start'));
+          layers.push(pin(last[last.length - 1], 'end'));
 
           if (routeLayer) {
             map.removeLayer(routeLayer);
           }
-          routeLayer = L.featureGroup([
-            L.polyline(latlngs, { color: '#ffffff', weight: 9, opacity: 0.95, interactive: false }),
-            L.polyline(latlngs, { color: '#2f6fde', weight: 5, opacity: 1, interactive: false }),
-            L.polyline(latlngs, { color: '#ffffff', weight: 3, opacity: 0.9, interactive: false, className: 'route-line' }),
-            pin(latlngs[0], 'start'),
-            pin(latlngs[latlngs.length - 1], 'end'),
-          ]).addTo(map);
-
+          routeLayer = L.featureGroup(layers).addTo(map);
           window.highlightSpace(spaceId, { center: false });
+          styleRoute();
           map.flyToBounds(routeLayer.getBounds(), { padding: [50, 50], duration: 0.7 });
 
-          var minutes = Math.max(1, Math.round(meters / WALK_SPEED / 60));
+          var seconds = meters / WALK_SPEED + changes * FLOOR_SECONDS;
           showBanner('');
           send('route', {
             id: spaceId,
             distancia: Math.round(meters),
-            minutos: minutes,
+            minutos: Math.max(1, Math.round(seconds / 60)),
             piso: entry.piso,
+            escaleras: changes,
+            aproximado: approx,
             edificio: entry.space.edificio || null,
             nombre: entry.space.nombre,
             desde: origin.nombre || null,
@@ -820,6 +1017,7 @@
           computeRoute(spaceId, start);
           return true;
         };
+
 
         function showMessage(text) {
           var box = document.createElement('div');
@@ -871,15 +1069,22 @@
           });
         }
 
-        function drawBase(base) {
+        function drawBase(base, bounds) {
+          map.createPane('campusGround');
+          map.getPane('campusGround').style.zIndex = 340;
+          map.createPane('campusSite');
+          map.getPane('campusSite').style.zIndex = 345;
           map.createPane('campusBase');
           map.getPane('campusBase').style.zIndex = 350;
           var common = { pane: 'campusBase', interactive: false };
           if (base.perimetro && base.perimetro.length > 2) {
             L.polygon(
               toLatLngs(base.perimetro),
-              L.extend({ color: theme.primary, weight: 1, opacity: 0.35, fillColor: theme.light, fillOpacity: 0.12 }, common)
+              { pane: 'campusGround', interactive: false, color: theme.primary, weight: 1, opacity: 0.35, fillColor: theme.light, fillOpacity: 0.1 }
             ).addTo(map);
+          }
+          if (base.fondo) {
+            L.imageOverlay(base.fondo, bounds, { pane: 'campusSite', interactive: false, className: 'site-plan' }).addTo(map);
           }
           (base.edificios || []).forEach(function (building) {
             (building.anillos || []).forEach(function (ring) {
@@ -891,6 +1096,31 @@
               }
             });
           });
+        }
+
+        function whenSized(fn) {
+          var box = document.getElementById('map');
+          if (box.clientWidth > 0 && box.clientHeight > 0) {
+            fn();
+            return;
+          }
+          var done = false;
+          var check = function () {
+            if (!done && box.clientWidth > 0 && box.clientHeight > 0) {
+              done = true;
+              fn();
+            }
+          };
+          if (window.ResizeObserver) {
+            new ResizeObserver(check).observe(box);
+          }
+          window.addEventListener('resize', check);
+          (function poll() {
+            if (!done) {
+              check();
+              setTimeout(poll, 150);
+            }
+          })();
         }
 
         function init() {
@@ -924,7 +1154,7 @@
           });
 
           if (hasBase) {
-            drawBase(plan.navegacion.base);
+            drawBase(plan.navegacion.base, bounds);
           } else {
             L.imageOverlay(plan.imagen, bounds).addTo(map);
           }
@@ -970,10 +1200,7 @@
             return (parseFloat(a) || 0) - (parseFloat(b) || 0) || a.localeCompare(b);
           });
 
-          nav = plan.navegacion && plan.navegacion.malla ? decodeGrid(plan.navegacion) : null;
-          if (nav) {
-            nav.entradas = plan.navegacion.entradas || [];
-          }
+          nav = plan.navegacion && (plan.navegacion.malla || plan.navegacion.pisos) ? decodeNav(plan.navegacion) : null;
 
           map.on('click', function (event) {
             if (!picking) {
@@ -996,9 +1223,16 @@
           ready = true;
           window.showFloor(floors.indexOf('1') >= 0 ? '1' : floors[0] || '1');
 
-          window.addEventListener('resize', function () {
+          var refit = function () {
             map.invalidateSize();
-          });
+            if (!isFinite(map.getZoom())) {
+              window.fitPlan();
+            }
+          };
+          window.addEventListener('resize', refit);
+          if (window.ResizeObserver) {
+            new ResizeObserver(refit).observe(map.getContainer());
+          }
 
           send('ready', {
             planId: plan.id,
@@ -1020,9 +1254,11 @@
         }
 
         if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', init);
+          document.addEventListener('DOMContentLoaded', function () {
+            whenSized(init);
+          });
         } else {
-          init();
+          whenSized(init);
         }
       })();
     </script>

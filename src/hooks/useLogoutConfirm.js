@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import useAuth from './useAuth';
 
-const useAdminLogout = () => {
+const useLogoutConfirm = () => {
   const { logout } = useAuth();
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -16,4 +16,4 @@ const useAdminLogout = () => {
   return { visible, loading, open, close, confirm };
 };
 
-export default useAdminLogout;
+export default useLogoutConfirm;

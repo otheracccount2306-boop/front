@@ -2,7 +2,6 @@ import React from 'react';
 import { Platform, useWindowDimensions } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import AppIcon from '../components/common/AppIcon';
 import CalendarScreen from '../screens/academic/CalendarScreen';
 import PersonalClassFormScreen from '../screens/academic/PersonalClassFormScreen';
 import ScheduleScreen from '../screens/academic/ScheduleScreen';
@@ -15,8 +14,6 @@ import NewsScreen from '../screens/news/NewsScreen';
 import DirectoryScreen from '../screens/services/DirectoryScreen';
 import FAQScreen from '../screens/services/FAQScreen';
 import WellbeingScreen from '../screens/services/WellbeingScreen';
-import colors from '../theme/colors';
-import { fontSizes } from '../theme/typography';
 import { SIDEBAR_MIN_WIDTH, SIDEBAR_WIDTH, TAB_ITEMS } from './tabItems';
 import WebSidebar from './WebSidebar';
 
@@ -81,26 +78,12 @@ const MainNavigator = () => {
   return (
     <Tab.Navigator
       initialRouteName="InicioTab"
-      tabBar={useSidebar ? (props) => <WebSidebar {...props} /> : undefined}
+      tabBar={useSidebar ? (props) => <WebSidebar {...props} /> : () => null}
       sceneContainerStyle={useSidebar ? { marginLeft: SIDEBAR_WIDTH } : undefined}
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.gray3,
-        tabBarLabelStyle: { fontSize: fontSizes.label, fontWeight: '600' },
-        tabBarStyle: { borderTopColor: colors.gray4, backgroundColor: colors.white },
-      }}
+      screenOptions={{ headerShown: false }}
     >
       {TAB_ITEMS.map((item) => (
-        <Tab.Screen
-          key={item.name}
-          name={item.name}
-          component={TAB_COMPONENTS[item.name]}
-          options={{
-            tabBarLabel: item.label,
-            tabBarIcon: ({ color, size }) => <AppIcon name={item.icon} size={size} color={color} />,
-          }}
-        />
+        <Tab.Screen key={item.name} name={item.name} component={TAB_COMPONENTS[item.name]} options={{ title: item.label }} />
       ))}
     </Tab.Navigator>
   );

@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import useAdminLogout from '../../hooks/useAdminLogout';
+import useLogoutConfirm from '../../hooks/useLogoutConfirm';
 import colors from '../../theme/colors';
 import { spacing } from '../../theme/typography';
 import ConfirmDialog from '../common/ConfirmDialog';
@@ -11,7 +11,7 @@ import AdminMenu from './AdminMenu';
 const AdminDrawer = ({ visible, onClose }) => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const logout = useAdminLogout();
+  const logout = useLogoutConfirm();
   const parent = navigation.getParent();
   const parentState = parent ? parent.getState() : null;
   const active = parentState ? parentState.routes[parentState.index].name : null;

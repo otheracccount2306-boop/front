@@ -83,7 +83,7 @@ describe('fondo vectorial', () => {
     const config = readConfig(html);
     expect(config.plan.imagen).toBeNull();
     expect(config.plan.navegacion.base).toEqual(base);
-    expect(html).toContain('drawBase(plan.navegacion.base)');
+    expect(html).toContain('drawBase(plan.navegacion.base, bounds)');
   });
 });
 
@@ -99,5 +99,14 @@ describe('parseMapMessage', () => {
     });
     expect(parseMapMessage('{"source":"otra-cosa","type":"ready"}')).toBeNull();
     expect(parseMapMessage('no es json')).toBeNull();
+  });
+});
+
+describe('navegación por pisos', () => {
+  test('el mapa acepta la malla por pisos, espera a tener tamaño y no enruta sin escaleras', () => {
+    const html = buildMapHtml({ ...plan, navegacion: { version: 2, celdaPx: 1.5, ancho: 4, alto: 2, pisos: {} } });
+    expect(html).toContain('decodeNav(');
+    expect(html).toContain('whenSized(');
+    expect(html).toContain('por la escalera');
   });
 });

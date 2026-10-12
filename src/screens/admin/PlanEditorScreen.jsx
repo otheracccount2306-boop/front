@@ -106,6 +106,7 @@ const PlanEditorScreen = ({ navigation, route }) => {
         }
         return true;
       }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [spaces, filter, query, planId, floor],
   );
 
